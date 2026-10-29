@@ -1,0 +1,12 @@
+{
+  "name": "le-juste-prix",
+  "version": "1.0.0",
+  "description": "Le Juste Prix — Jeu de quiz en temps réel",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

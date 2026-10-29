@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Le Juste Prix — Joueur</title>
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #0d1b4b 0%, #1a0a3c 50%, #0d1b4b 100%);
+      --gold: #ffd700;
+      --gold-dark: #b8860b;
+      --panel: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.15);
+      --white: #ffffff;
+      --muted: rgba(255,255,255,0.6);
+      --green: #00c853;
+      --red: #e53935;
+      --blue: #1565c0;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+      padding-bottom: 32px;
+    }
+
+    /* ── LOGO ── */
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: 1px;
+      text-align: center;
+      margin-bottom: 20px;
+      text-shadow: 0 0 16px rgba(255,215,0,0.4);
+    }
+
+    /* ── CARDS / PANELS ── */
+    .card {
+      width: 100%;
+      max-width: 480px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 20px;
+      margin-bottom: 16px;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      color: var(--gold);
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    /* ── INPUT ── */
+    .field-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.1);
+      color: var(--white);
+      font-size: 1.1rem;
+      outline: none;
+      margin-bottom: 14px;
+      -webkit-appearance: none;
+    }
+    input[type="number"] {
+      font-size: 1.6rem;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+    input::placeholder { color: var(--muted); }
+    select option { color: #000; background: #fff; }
+
+    /* ── BOUTONS ── */
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: opacity 0.15s, transform 0.1s;
+      text-align: center;
+    }
+    .btn:active { transform: scale(0.97); opacity: 0.85; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .btn-gold   { background: var(--gold); color: #000; }
+    .btn-green  { background: #2e7d32; color: #fff; }
+    .btn-danger { background: #c62828; color: #fff; }
+    .btn-secondary { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid var(--border); }
+
+    /* ── QCM BOUTONS ── */
+    .qcm-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .qcm-btn {
+      padding: 20px 8px;
+      border-radius: 14px;
+      border: 2px solid var(--border);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      background: var(--panel);
+      color: var(--white);
+      line-height: 1.3;
+    }
+    .qcm-btn:active { transform: scale(0.95); }
+    .qcm-btn.selected {
+      border-color: var(--gold);
+      background: rgba(255,215,0,0.2);
+      color: var(--gold);
+    }
+    .qcm-btn .letter {
+      display: block;
+      font-size: 1.8rem;
+      margin-bottom: 4px;
+    }
+    .qcm-btn .label {
+      font-size: 0.82rem;
+      opacity: 0.9;
+    }
+
+    /* ── PLUS/MOINS ── */
+    .pm-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 8px;
+    }
+    .pm-btn {
+      padding: 32px 0;
+      border-radius: 16px;
+      border: 2px solid var(--border);
+      font-size: 3rem;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      background: var(--panel);
+      color: var(--white);
+    }
+    .pm-btn:active { transform: scale(0.95); }
+    .pm-btn.plus.selected  { border-color: var(--green); background: rgba(0,200,83,0.2); }
+    .pm-btn.minus.selected { border-color: var(--red);   background: rgba(229,57,53,0.2); }
+
+    /* ── PRIX INPUT ── */
+    .prix-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .prix-wrap input {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    .prix-euro {
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--gold);
+    }
+
+    /* ── ÉTAT PHASES ── */
+    .phase-banner {
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+      padding: 28px 20px;
+      border-radius: 16px;
+      margin-bottom: 16px;
+    }
+    .phase-banner.lobby {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+    }
+    .phase-banner.waiting {
+      background: rgba(255,215,0,0.08);
+      border: 1px solid rgba(255,215,0,0.3);
+    }
+    .phase-banner.answered {
+      background: rgba(0,200,83,0.1);
+      border: 1px solid rgba(0,200,83,0.4);
+    }
+    .phase-banner.closed {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+    }
+
+    .phase-icon { font-size: 3rem; margin-bottom: 10px; }
+    .phase-title { font-size: 1.3rem; font-weight: 700; color: var(--gold); margin-bottom: 6px; }
+    .phase-sub { font-size: 0.9rem; color: var(--muted); }
+
+    /* ── ÉQUIPE BADGE ── */
+    .team-badge {
+      display: inline-block;
+      background: rgba(255,215,0,0.15);
+      border: 1px solid rgba(255,215,0,0.4);
+      color: var(--gold);
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 4px;
+    }
+
+    /* ── CONFIRMATION RÉPONSE ── */
+    .answer-confirm {
+      text-align: center;
+      padding: 20px;
+    }
+    .answer-value {
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--green);
+      margin: 10px 0;
+    }
+    .answer-label {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    /* ── TIMER ── */
+    .timer {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--gold);
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .timer.urgent { color: #ff5252; animation: pulse 0.6s infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+    /* ── QUESTION LABEL ── */
+    .question-label {
+      font-size: 1.15rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+    .epreuve-tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--gold);
+      background: rgba(255,215,0,0.1);
+      border: 1px solid rgba(255,215,0,0.3);
+      border-radius: 6px;
+      padding: 3px 10px;
+      margin-bottom: 8px;
+    }
+
+    /* ── SPINNER ── */
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── CONNEXION FORM ── */
+    #section-join  { display: block; }
+    #section-lobby { display: none; }
+    #section-game  { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="logo">🎯 Le Juste Prix</div>
+
+<!-- ══════════ SECTION : CONNEXION ══════════ -->
+<div id="section-join">
+  <div class="card">
+    <h2>Rejoindre la partie</h2>
+
+    <div class="field-label">Code de la partie</div>
+    <input type="text" id="input-code" placeholder="EX : AB3K7F" maxlength="8"
+           style="text-transform:uppercase;text-align:center;font-size:1.8rem;letter-spacing:4px;">
+
+    <div class="field-label">Votre équipe</div>
+    <select id="select-team">
+      <option value="">— Choisissez votre équipe —</option>
+    </select>
+
+    <button class="btn btn-gold" onclick="joinGame()">Rejoindre ▶</button>
+    <div id="join-error" style="color:#ff5252;font-size:0.88rem;text-align:center;margin-top:10px;display:none;"></div>
+  </div>
+</div>
+
+<!-- ══════════ SECTION : LOBBY / ATTENTE ══════════ -->
+<div id="section-lobby">
+  <div class="phase-banner lobby">
+    <div class="phase-icon">⏳</div>
+    <div class="phase-title">En attente</div>
+    <div id="lobby-team" class="team-badge" style="display:block;margin:10px auto 0;"></div>
+    <div class="phase-sub" style="margin-top:12px;">L'animateur va bientôt lancer la première question…</div>
+  </div>
+</div>
+
+<!-- ══════════ SECTION : JEU ══════════ -->
+<div id="section-game">
+
+  <!-- Attente question -->
+  <div id="state-waiting" style="display:none;">
+    <div class="phase-banner waiting">
+      <div class="phase-icon">👁️</div>
+      <div class="team-badge" id="game-team-badge" style="display:block;margin:0 auto 12px;"></div>
+      <div class="phase-title">Regardez l'écran !</div>
+      <div class="phase-sub">La question va s'afficher…</div>
+    </div>
+  </div>
+
+  <!-- Saisie réponse -->
+  <div id="state-answering" style="display:none;">
+    <div class="card">
+      <div id="question-epreuve-tag" class="epreuve-tag"></div>
+      <div id="question-label" class="question-label"></div>
+      <div id="timer-display" class="timer"></div>
+      <div id="answer-ui"></div>
+      <div style="margin-top:14px;">
+        <button class="btn btn-green" id="btn-submit" onclick="submitAnswer()">✅ Valider ma réponse</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Réponse envoyée -->
+  <div id="state-answered" style="display:none;">
+    <div class="phase-banner answered">
+      <div class="phase-icon">✅</div>
+      <div class="phase-title">Réponse enregistrée !</div>
+      <div class="answer-confirm">
+        <div class="answer-label">Votre réponse</div>
+        <div class="answer-value" id="confirmed-answer"></div>
+        <div class="answer-label" id="confirmed-time"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Saisie fermée (sans avoir répondu) -->
+  <div id="state-closed" style="display:none;">
+    <div class="phase-banner closed">
+      <div class="phase-icon">🔒</div>
+      <div class="phase-title">Temps écoulé !</div>
+      <div class="phase-sub">La saisie est maintenant fermée.<br>Attendez la prochaine question.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ======================================================================
+// CONFIG
+// ======================================================================
+
+const API = '';  // même origine — le serveur sert les deux fichiers
+
+// ======================================================================
+// ÉTAT LOCAL
+// ======================================================================
+
+let player = null;  // { teamIndex, teamName, playerId }
+let lastPhase = null;
+let currentQuestionId = null;  // epreuve+index pour détecter les changements
+let hasAnswered = false;
+let pendingAnswer = null;
+let timerInterval = null;
+
+// ======================================================================
+// UTILITAIRES
+// ======================================================================
+
+function genPlayerId() {
+  return 'p_' + Math.random().toString(36).slice(2, 10);
+}
+
+function apiPost(url, data) {
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(r => r.json());
+}
+
+function showError(msg) {
+  const el = document.getElementById('join-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function hideError() {
+  document.getElementById('join-error').style.display = 'none';
+}
+
+// ======================================================================
+// CONNEXION
+// ======================================================================
+
+async function loadTeams() {
+  try {
+    const res = await fetch('/api/session');
+    const data = await res.json();
+    const sess = data.session;
+    if (!sess || !sess.teams) return;
+
+    const select = document.getElementById('select-team');
+    select.innerHTML = '<option value="">— Choisissez votre équipe —</option>';
+    sess.teams.forEach((name, i) => {
+      const taken = sess.connected[i] !== undefined;
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = name + (taken ? ' (déjà connectée)' : '');
+      opt.disabled = taken;
+      select.appendChild(opt);
+    });
+  } catch(e) { /* serveur pas encore démarré */ }
+}
+
+async function joinGame() {
+  hideError();
+  const code = document.getElementById('input-code').value.trim().toUpperCase();
+  const teamIndex = parseInt(document.getElementById('select-team').value);
+
+  if (!code) return showError('Entrez le code de la partie.');
+  if (isNaN(teamIndex)) return showError('Choisissez votre équipe.');
+
+  const playerId = genPlayerId();
+  const res = await apiPost('/api/join', { code, teamIndex, playerId });
+
+  if (res.error) return showError(res.error);
+
+  player = { teamIndex, teamName: res.teamName, playerId };
+  localStorage.setItem('ljp_player', JSON.stringify(player));
+
+  document.getElementById('section-join').style.display  = 'none';
+  document.getElementById('section-lobby').style.display = 'block';
+  document.getElementById('lobby-team').textContent = player.teamName;
+
+  startPolling();
+}
+
+// ======================================================================
+// POLLING — lit l'état du serveur toutes les 800ms
+// ======================================================================
+
+function startPolling() {
+  poll(); // immédiat
+  setInterval(poll, 800);
+}
+
+async function poll() {
+  if (!player) return;
+  try {
+    const res = await fetch('/api/session');
+    const data = await res.json();
+    if (!data.session) return; // session détruite
+    applyState(data.session);
+  } catch(e) { /* réseau, ignorer */ }
+}
+
+function applyState(sess) {
+  const phase = sess.phase;
+  const q = sess.question;
+  const qId = q ? `${q.epreuve}-${q.index}` : null;
+
+  // Nouvelle question détectée → reset et re-rendu
+  const isNewQuestion = qId !== currentQuestionId;
+  if (isNewQuestion) {
+    hasAnswered = false;
+    pendingAnswer = null;
+    currentQuestionId = qId;
+    clearInterval(timerInterval);
+  }
+
+  // Si la session est en lobby, rester sur la page lobby
+  if (phase === 'lobby' || !q) {
+    showSection('lobby');
+    return;
+  }
+
+  // Affichage selon phase
+  showSection('game');
+
+  if (phase === 'answering' && !hasAnswered) {
+    showGameState('answering');
+    // Ne re-rendre la question que si c'est une nouvelle question,
+    // sinon le joueur perd sa sélection en cours à chaque poll
+    if (isNewQuestion) {
+      renderQuestion(q, sess.openedAt);
+    }
+  } else if (phase === 'answering' && hasAnswered) {
+    showGameState('answered');
+  } else if (phase === 'closed') {
+    clearInterval(timerInterval);
+    if (hasAnswered) {
+      showGameState('answered');
+    } else {
+      showGameState('closed');
+    }
+  } else if (phase === 'waiting') {
+    showGameState('waiting');
+  }
+}
+
+function showSection(name) {
+  document.getElementById('section-lobby').style.display = name === 'lobby' ? 'block' : 'none';
+  document.getElementById('section-game').style.display  = name === 'game'  ? 'block' : 'none';
+}
+
+function showGameState(name) {
+  ['waiting','answering','answered','closed'].forEach(s => {
+    document.getElementById('state-' + s).style.display = s === name ? 'block' : 'none';
+  });
+  if (name !== 'answering') clearInterval(timerInterval);
+}
+
+// ======================================================================
+// RENDU DE LA QUESTION
+// ======================================================================
+
+const EPREUVE_LABELS = {
+  1: 'ÉPREUVE 1 — QCM',
+  2: 'ÉPREUVE 2 — LE JUSTE PRIX',
+  3: 'ÉPREUVE 3 — PANIERS',
+  4: 'ÉPREUVE 4 — PLUS OU MOINS ?'
+};
+
+function renderQuestion(q, openedAt) {
+  document.getElementById('question-epreuve-tag').textContent = EPREUVE_LABELS[q.epreuve] || '';
+  document.getElementById('question-label').textContent = q.label || '';
+  document.getElementById('game-team-badge').textContent = player ? player.teamName : '';
+
+  const ui = document.getElementById('answer-ui');
+  pendingAnswer = null;
+  document.getElementById('btn-submit').disabled = true;
+
+  if (q.type === 'qcm') {
+    // 4 boutons A B C D
+    ui.innerHTML = `<div class="qcm-grid">
+      ${(q.choices || []).map((choice, i) => {
+        const letter = ['A','B','C','D'][i];
+        return `<button class="qcm-btn" onclick="selectQcm('${letter}', this)">
+          <span class="letter">${letter}</span>
+          <span class="label">${escHtml(choice)}</span>
+        </button>`;
+      }).join('')}
+    </div>`;
+
+  } else if (q.type === 'prix' || q.type === 'panier') {
+    ui.innerHTML = `
+      <div class="prix-wrap">
+        <input type="number" id="input-prix" min="0" step="1" placeholder="0"
+               oninput="onPrixInput(this)">
+        <div class="prix-euro">€</div>
+      </div>
+    `;
+    setTimeout(() => {
+      const inp = document.getElementById('input-prix');
+      if (inp) inp.focus();
+    }, 200);
+
+  } else if (q.type === 'plusmoins') {
+    ui.innerHTML = `
+      <div class="pm-grid">
+        <button class="pm-btn plus" onclick="selectPM('+', this)">＋</button>
+        <button class="pm-btn minus" onclick="selectPM('−', this)">－</button>
+      </div>
+      ${q.prixPropose !== null && q.prixPropose !== undefined
+        ? `<div style="text-align:center;margin-top:12px;color:var(--muted);font-size:0.9rem;">
+             Prix proposé : <strong style="color:var(--white);font-size:1.1rem;">${formatPrice(q.prixPropose)}</strong>
+           </div>`
+        : ''}
+    `;
+  }
+
+  startTimer(openedAt);
+}
+
+// ── Sélection QCM
+function selectQcm(letter, btn) {
+  document.querySelectorAll('.qcm-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  pendingAnswer = letter;
+  document.getElementById('btn-submit').disabled = false;
+}
+
+// ── Saisie prix
+function onPrixInput(inp) {
+  const val = inp.value.trim();
+  pendingAnswer = val !== '' ? parseFloat(val) : null;
+  document.getElementById('btn-submit').disabled = pendingAnswer === null;
+}
+
+// ── Plus ou moins
+function selectPM(sign, btn) {
+  document.querySelectorAll('.pm-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  pendingAnswer = sign;
+  document.getElementById('btn-submit').disabled = false;
+}
+
+// ── Timer
+function startTimer(openedAt) {
+  clearInterval(timerInterval);
+  const el = document.getElementById('timer-display');
+
+  function tick() {
+    const elapsed = Math.floor((Date.now() - openedAt) / 1000);
+    const secs = elapsed % 60;
+    const mins = Math.floor(elapsed / 60);
+    const txt = (mins > 0 ? `${mins}:` : '') + String(secs).padStart(2, '0');
+    el.textContent = `⏱ ${txt}`;
+    el.className = 'timer' + (elapsed >= 25 ? ' urgent' : '');
+  }
+  tick();
+  timerInterval = setInterval(tick, 500);
+}
+
+// ======================================================================
+// SOUMISSION
+// ======================================================================
+
+async function submitAnswer() {
+  if (pendingAnswer === null || pendingAnswer === undefined) return;
+  if (hasAnswered) return;
+
+  document.getElementById('btn-submit').disabled = true;
+
+  const res = await apiPost('/api/answer', {
+    teamIndex: player.teamIndex,
+    value: pendingAnswer
+  });
+
+  if (res.error) {
+    // La saisie était peut-être déjà fermée
+    showGameState('closed');
+    return;
+  }
+
+  hasAnswered = true;
+  clearInterval(timerInterval);
+
+  // Afficher confirmation
+  let display = pendingAnswer;
+  const q = currentQuestionId;
+  if (typeof pendingAnswer === 'number') display = formatPrice(pendingAnswer);
+  else if (pendingAnswer === '+') display = '＋ PLUS';
+  else if (pendingAnswer === '−') display = '－ MOINS';
+
+  document.getElementById('confirmed-answer').textContent = display;
+  document.getElementById('confirmed-time').textContent =
+    `Réponse enregistrée en ${(res.timestamp / 1000).toFixed(1)}s`;
+
+  showGameState('answered');
+}
+
+// ======================================================================
+// UTILITAIRES
+// ======================================================================
+
+function escHtml(str) {
+  if (!str && str !== 0) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function formatPrice(val) {
+  if (val === null || val === undefined) return '???';
+  return parseFloat(val).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+}
+
+// ======================================================================
+// INIT
+// ======================================================================
+
+// Tenter de restaurer une session précédente
+(function init() {
+  const saved = localStorage.getItem('ljp_player');
+  if (saved) {
+    try {
+      const p = JSON.parse(saved);
+      // Vérifier que la session est toujours valide
+      fetch('/api/session').then(r => r.json()).then(data => {
+        const sess = data.session;
+        if (sess && sess.connected[p.teamIndex]) {
+          player = p;
+          document.getElementById('section-join').style.display  = 'none';
+          document.getElementById('section-lobby').style.display = 'block';
+          document.getElementById('lobby-team').textContent = player.teamName;
+          startPolling();
+        } else {
+          localStorage.removeItem('ljp_player');
+          loadTeams();
+        }
+      }).catch(() => loadTeams());
+    } catch(e) {
+      localStorage.removeItem('ljp_player');
+      loadTeams();
+    }
+  } else {
+    loadTeams();
+  }
+
+  // Pré-remplir le code depuis l'URL (?code=ABC123)
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if (code) document.getElementById('input-code').value = code.toUpperCase();
+})();
+</script>
+</body>
+</html>

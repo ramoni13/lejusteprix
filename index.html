@@ -1,0 +1,3503 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1024">
+  <title>Le Juste Prix</title>
+  <style>
+    /* ===== VARIABLES & RESET ===== */
+    :root {
+      --bg-grad: linear-gradient(135deg, #0d1b4b 0%, #1a0a3c 50%, #0d1b4b 100%);
+      --gold: #ffd700;
+      --gold-dark: #b8860b;
+      --blue-btn: #1565c0;
+      --red-btn: #c62828;
+      --green-btn: #2e7d32;
+      --yellow-btn: #f9a825;
+      --panel-bg: rgba(255,255,255,0.08);
+      --panel-border: rgba(255,255,255,0.15);
+      --text-white: #ffffff;
+      --text-muted: rgba(255,255,255,0.6);
+      --correct-green: #00c853;
+      --modal-bg: rgba(0,0,0,0.85);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg-grad);
+      color: var(--text-white);
+      min-width: 1024px;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== SCREENS ===== */
+    .screen { display: none; width: 100%; min-height: 100vh; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* ===== CONFIG SCREEN ===== */
+    #screen-config {
+      padding: 20px;
+      align-items: center;
+    }
+
+    #screen-config h1 {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--gold);
+      text-shadow: 0 0 20px rgba(255,215,0,0.5);
+      margin-bottom: 20px;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+
+    .config-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .config-tab {
+      padding: 10px 20px;
+      border: 2px solid var(--panel-border);
+      background: var(--panel-bg);
+      color: var(--text-white);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .config-tab:hover { background: rgba(255,255,255,0.15); }
+    .config-tab.active {
+      background: var(--gold);
+      color: #000;
+      border-color: var(--gold);
+    }
+
+    .config-panel {
+      display: none;
+      width: 100%;
+      max-width: 900px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .config-panel.active { display: block; }
+
+    .config-panel h2 {
+      font-size: 1.4rem;
+      color: var(--gold);
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 8px;
+    }
+
+    .teams-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .team-input-wrap { display: flex; flex-direction: column; gap: 4px; }
+    .team-input-wrap label { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+
+    .team-remove-btn {
+      background: var(--red-btn);
+      border: none;
+      border-radius: 4px;
+      color: white;
+      font-size: 0.75rem;
+      padding: 2px 7px;
+      cursor: pointer;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+    .team-remove-btn:hover { filter: brightness(1.2); }
+
+    .team-add-wrap {
+      display: flex;
+      align-items: flex-end;
+      padding-bottom: 2px;
+    }
+    .team-add-btn {
+      font-size: 0.9rem;
+      padding: 8px 16px;
+      white-space: nowrap;
+    }
+
+    input[type="text"], input[type="number"] {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      color: var(--text-white);
+      padding: 8px 12px;
+      font-size: 1rem;
+      width: 100%;
+    }
+    input[type="text"]:focus, input[type="number"]:focus {
+      outline: none;
+      border-color: var(--gold);
+      background: rgba(255,255,255,0.15);
+    }
+
+    .product-block {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .product-block h3 {
+      font-size: 1rem;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .field-group { display: flex; flex-direction: column; gap: 4px; }
+    .field-group label { font-size: 0.8rem; color: var(--text-muted); }
+
+    .qcm-prices {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr) auto;
+      gap: 8px;
+      align-items: end;
+      margin-top: 8px;
+    }
+
+    .radio-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding-bottom: 8px;
+    }
+    .radio-group label { font-size: 0.85rem; color: var(--text-muted); }
+
+    .panier-block { margin-bottom: 12px; }
+    .panier-products { margin-top: 8px; }
+    .panier-products .product-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .config-actions {
+      margin-top: 24px;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 700;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+
+    .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: var(--gold);
+      color: #000;
+      font-size: 1.2rem;
+      padding: 14px 32px;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.15);
+      color: var(--text-white);
+      border: 1px solid var(--panel-border);
+    }
+
+    .btn-danger {
+      background: var(--red-btn);
+      color: white;
+    }
+
+    .btn-success {
+      background: var(--green-btn);
+      color: white;
+    }
+
+    .btn-info {
+      background: var(--blue-btn);
+      color: white;
+    }
+
+    /* ===== GAME SCREEN ===== */
+    #screen-game {
+      flex-direction: column;
+    }
+
+    .game-layout {
+      display: flex;
+      flex: 1;
+      gap: 0;
+      overflow: hidden;
+    }
+
+    .game-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .game-sidebar {
+      width: 280px;
+      background: rgba(0,0,0,0.4);
+      border-left: 1px solid var(--panel-border);
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .epreuve-badge {
+      display: inline-block;
+      background: var(--gold);
+      color: #000;
+      font-weight: 900;
+      font-size: 0.9rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+
+    .question-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--text-white);
+      margin-bottom: 6px;
+      line-height: 1.2;
+    }
+
+    .product-source {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      font-style: italic;
+    }
+
+    .product-source::before {
+      content: '📍 ';
+      font-style: normal;
+    }
+
+    .product-image-wrap {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .product-image-wrap img {
+      max-height: 280px;
+      max-width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      object-fit: contain;
+      cursor: zoom-in;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .product-image-wrap img:hover {
+      transform: scale(1.03);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.8);
+    }
+
+    .product-image-wrap .no-image {
+      width: 200px;
+      height: 200px;
+      background: rgba(255,255,255,0.05);
+      border: 2px dashed var(--panel-border);
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* QCM choices */
+    .qcm-choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .choice-btn {
+      padding: 16px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.4rem;
+      font-weight: 800;
+      cursor: default;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .choice-btn.A { background: var(--yellow-btn); color: #000; }
+    .choice-btn.B { background: var(--blue-btn); color: #fff; }
+    .choice-btn.C { background: var(--red-btn); color: #fff; }
+    .choice-btn.D { background: var(--green-btn); color: #fff; }
+
+    .choice-btn .choice-letter {
+      font-size: 1.6rem;
+      font-weight: 900;
+      min-width: 36px;
+    }
+
+    .choice-btn.correct-highlight {
+      outline: 4px solid white;
+      outline-offset: 2px;
+      animation: pulse-correct 1s infinite;
+    }
+
+    @keyframes pulse-correct {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+
+    /* E4 display */
+    .e4-layout {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 60px;
+      margin-top: 12px;
+    }
+    .e4-image {
+      flex: 0 0 300px;
+      width: 300px;
+      margin-bottom: 0 !important;
+      text-align: center;
+    }
+    .e4-image img {
+      max-height: 240px;
+      max-width: 280px;
+      width: 100%;
+      object-fit: contain;
+    }
+    .e4-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .e4-proposed-price {
+      font-size: 4.5rem;
+      font-weight: 900;
+      color: var(--gold);
+      text-shadow: 0 0 30px rgba(255,215,0,0.5);
+      line-height: 1;
+      margin-bottom: 24px;
+    }
+    .e4-proposed-label {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .e4-signs {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+    }
+    .e4-real-price {
+      margin-top: 20px;
+      font-size: 1.4rem;
+      color: var(--correct-green);
+    }
+    .sign-btn {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      border: none;
+      font-size: 3.5rem;
+      font-weight: 900;
+      cursor: default;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    .sign-btn.plus { background: var(--green-btn); color: white; }
+    .sign-btn.minus { background: var(--red-btn); color: white; }
+
+    /* E2/E3 display */
+    .estimation-display {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .estimation-label {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    /* Panier display */
+    .panier-items {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+      justify-content: center;
+    }
+    .panier-item-card {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      width: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .panier-item-card img {
+      width: 120px;
+      height: 100px;
+      object-fit: contain;
+      border-radius: 8px;
+      cursor: zoom-in;
+      transition: transform 0.15s;
+    }
+    .panier-item-card img:hover { transform: scale(1.06); }
+    .panier-item-card .no-image {
+      width: 120px;
+      height: 100px;
+      background: rgba(255,255,255,0.04);
+      border: 1px dashed var(--panel-border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .panier-item-name {
+      font-size: 0.85rem;
+      color: var(--text-white);
+      line-height: 1.3;
+    }
+    .panier-item-price {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+    .panier-item-price.hidden {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+    .panier-item-source {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* ===== INTRO MANCHE SCREEN ===== */
+    #screen-intro {
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 40px;
+    }
+
+    .intro-number {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .intro-title {
+      font-size: 4rem;
+      font-weight: 900;
+      color: var(--gold);
+      text-shadow: 0 0 40px rgba(255,215,0,0.6);
+      margin-bottom: 28px;
+      line-height: 1.1;
+      letter-spacing: 2px;
+    }
+
+    .intro-divider {
+      width: 120px;
+      height: 4px;
+      background: var(--gold);
+      border-radius: 2px;
+      margin: 0 auto 28px;
+    }
+
+    .intro-description {
+      font-size: 1.5rem;
+      color: rgba(255,255,255,0.85);
+      max-width: 700px;
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .intro-points {
+      font-size: 1.1rem;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 48px;
+      background: rgba(255,215,0,0.1);
+      border: 1px solid rgba(255,215,0,0.3);
+      border-radius: 10px;
+      padding: 14px 28px;
+      display: inline-block;
+    }
+
+    .intro-speed-bonus {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--gold);
+      background: rgba(255,215,0,0.08);
+      border: 1px dashed rgba(255,215,0,0.4);
+      border-radius: 10px;
+      padding: 10px 22px;
+      margin-bottom: 32px;
+    }
+    .speed-bonus-pills {
+      display: flex;
+      gap: 8px;
+    }
+    .speed-bonus-pill {
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(255,215,0,0.2);
+      border: 1px solid var(--gold);
+    }
+
+    .intro-start-btn {
+      font-size: 1.4rem;
+      padding: 18px 48px;
+      border-radius: 50px;
+      animation: pulse-gold 2s infinite;
+    }
+
+    @keyframes pulse-gold {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,215,0,0.5); }
+      50% { box-shadow: 0 0 0 18px rgba(255,215,0,0); }
+    }
+
+    /* Correction overlay */
+    .correction-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 80, 0, 0.97);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      overflow-y: auto;
+      transition: background 0.5s;
+    }
+    .correction-overlay.visible { display: flex; }
+    .correction-overlay.has-fireworks { background: rgba(0, 20, 0, 0.65); }
+
+    .correction-price {
+      font-size: 5rem;
+      font-weight: 900;
+      color: var(--gold);
+      text-shadow: 0 0 40px rgba(255,215,0,0.8);
+      margin-bottom: 16px;
+    }
+    .correction-label {
+      font-size: 1.5rem;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 24px;
+    }
+    .correction-scores {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 24px;
+      max-width: 960px;
+    }
+    .correction-team-badge {
+      background: rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 14px 18px;
+      text-align: center;
+      min-width: 150px;
+    }
+    .correction-team-badge.won {
+      background: rgba(255,215,0,0.2);
+      border-color: var(--gold);
+    }
+    .correction-team-badge.exact {
+      background: rgba(0,200,100,0.25);
+      border-color: #00e676;
+      box-shadow: 0 0 20px rgba(0,230,118,0.4);
+    }
+    .correction-team-name { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 4px; }
+    .correction-team-answer {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 6px;
+    }
+    .correction-team-answer.correct-answer { color: #00e676; }
+    .correction-team-answer.wrong-answer { color: rgba(255,255,255,0.45); }
+    .correction-team-points { font-size: 1.6rem; font-weight: 900; color: var(--gold); }
+    .correction-team-points.zero { color: rgba(255,255,255,0.35); }
+    .correction-team-time {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .correction-speed-bonus {
+      display: inline-block;
+      margin-top: 5px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 8px;
+      background: rgba(255,215,0,0.25);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      animation: badge-pop 0.4s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
+    }
+    @keyframes badge-pop {
+      from { opacity: 0; transform: scale(0.5); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    /* Badge avec bonus vitesse : lueur dorée pulsante */
+    .correction-team-badge.speed-bonus {
+      box-shadow: 0 0 18px rgba(255,215,0,0.55);
+      animation: speed-glow 1.2s ease-in-out infinite alternate;
+    }
+    @keyframes speed-glow {
+      from { box-shadow: 0 0 10px rgba(255,215,0,0.4); }
+      to   { box-shadow: 0 0 28px rgba(255,215,0,0.85); }
+    }
+    /* Canvas mini feu d'artifice localisé sur un badge */
+    .correction-team-badge { position: relative; overflow: visible; }
+    .badge-fw-canvas {
+      position: absolute;
+      inset: -60px;
+      width: calc(100% + 120px);
+      height: calc(100% + 120px);
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* ===== FIREWORKS ===== */
+    #fireworks-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 199; /* sous l'overlay correction */
+    }
+
+    /* Message juste prix */
+    #exact-banner {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 201;
+      text-align: center;
+      pointer-events: none;
+    }
+    #exact-banner.visible { display: block; }
+
+    .exact-banner-text {
+      font-size: 3.8rem;
+      font-weight: 900;
+      color: var(--gold);
+      text-shadow:
+        0 0 20px rgba(255,215,0,0.9),
+        0 0 60px rgba(255,215,0,0.6),
+        0 4px 8px rgba(0,0,0,0.8);
+      animation: banner-pop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards,
+                 banner-glow 1.5s ease-in-out 0.5s infinite alternate;
+      white-space: nowrap;
+    }
+
+    .exact-banner-sub {
+      font-size: 2.6rem;
+      color: var(--gold);
+      font-weight: 900;
+      margin-top: 16px;
+      text-shadow:
+        0 0 20px rgba(255,215,0,0.8),
+        -2px -2px 0 #000,
+         2px -2px 0 #000,
+        -2px  2px 0 #000,
+         2px  2px 0 #000;
+      animation: banner-pop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) 0.2s both;
+    }
+
+    @keyframes banner-pop {
+      from { opacity: 0; transform: scale(0.4); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes banner-glow {
+      from { text-shadow: 0 0 20px rgba(255,215,0,0.9), 0 0 60px rgba(255,215,0,0.6), 0 4px 8px rgba(0,0,0,0.8); }
+      to   { text-shadow: 0 0 40px rgba(255,215,0,1),   0 0 100px rgba(255,215,0,0.9), 0 4px 8px rgba(0,0,0,0.8); }
+    }
+
+    /* Game bottom bar */
+    .game-bar {
+      background: rgba(0,0,0,0.5);
+      border-top: 1px solid var(--panel-border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* ===== LIVE MODE ===== */
+    .btn-live {
+      background: linear-gradient(135deg, #e53935, #b71c1c);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      border: 2px solid #ff5252;
+      box-shadow: 0 0 16px rgba(229,57,53,0.5);
+      animation: pulse-red 1.4s infinite;
+    }
+    @keyframes pulse-red {
+      0%,100% { box-shadow: 0 0 16px rgba(229,57,53,0.5); }
+      50%      { box-shadow: 0 0 30px rgba(229,57,53,0.9); }
+    }
+
+    .btn-live-close {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    /* Live answer panel (affiché sous la question) */
+    #live-answers-panel {
+      display: none;
+      background: rgba(0,0,0,0.4);
+      border-top: 2px solid rgba(229,57,53,0.5);
+      padding: 12px 20px;
+    }
+    #live-answers-panel.visible { display: block; }
+
+    .live-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .live-panel-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #ff5252;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .live-count {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .live-answers-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .live-answer-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.88rem;
+      transition: all 0.3s;
+    }
+    .live-answer-chip.has-answer {
+      background: rgba(0,200,83,0.12);
+      border-color: rgba(0,200,83,0.4);
+    }
+    .live-chip-team  { color: var(--text-muted); }
+    .live-chip-value { font-weight: 700; color: #00e676; }
+    .live-chip-time  { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* Session panel (dans la config) */
+    #live-session-panel {
+      width: 100%;
+      max-width: 900px;
+      background: rgba(229,57,53,0.08);
+      border: 1px solid rgba(229,57,53,0.35);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      display: none;
+    }
+    #live-session-panel.visible { display: block; }
+    .session-panel-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .session-code-box {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: var(--gold);
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      padding: 8px 20px;
+      border: 1px solid var(--gold);
+    }
+    .session-info {
+      flex: 1;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .session-conn-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .conn-chip {
+      font-size: 0.78rem;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+    .conn-chip.online  { background: rgba(0,200,83,0.2);  color: #00e676; border: 1px solid rgba(0,200,83,0.4); }
+    .conn-chip.offline { background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); }
+
+    /* Bonus chips dans la correction */
+    .bonus-chip {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: rgba(255,215,0,0.2);
+      color: var(--gold);
+      border: 1px solid rgba(255,215,0,0.5);
+      border-radius: 6px;
+      padding: 1px 6px;
+      margin-left: 4px;
+    }
+
+    .progress-indicator {
+      flex: 1;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    /* Sidebar scoreboard */
+    .sidebar-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gold);
+      text-align: center;
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 8px;
+    }
+
+    .score-list { flex: 1; overflow-y: auto; }
+
+    .score-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      background: rgba(255,255,255,0.05);
+      transition: all 0.3s;
+    }
+
+    .score-item.leader {
+      background: rgba(255,215,0,0.15);
+      border: 1px solid var(--gold);
+      animation: pulse-leader 2s infinite;
+    }
+
+    @keyframes pulse-leader {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,215,0,0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(255,215,0,0); }
+    }
+
+    .score-rank {
+      font-size: 0.85rem;
+      font-weight: 900;
+      color: var(--text-muted);
+      min-width: 24px;
+      text-align: center;
+    }
+    .score-rank.gold-rank { color: var(--gold); font-size: 1rem; }
+
+    .score-name {
+      flex: 1;
+      font-size: 0.95rem;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .score-value {
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: var(--gold);
+    }
+
+    /* ===== MODALS ===== */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--modal-bg);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop.visible { display: flex; }
+
+    .modal-box {
+      background: #1a1a3e;
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 28px;
+      width: 90%;
+      max-width: 700px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-box h2 {
+      font-size: 1.4rem;
+      color: var(--gold);
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 10px;
+    }
+
+    .modal-team-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 10px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+    }
+
+    .modal-team-name {
+      min-width: 120px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .modal-radio-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .modal-radio-group label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 2px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .modal-radio-group label:has(input:checked) {
+      border-color: var(--gold);
+      background: rgba(255,215,0,0.15);
+    }
+
+    .modal-radio-group input[type="radio"] { accent-color: var(--gold); }
+
+    .modal-number-input {
+      width: 110px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      color: white;
+      font-size: 1.1rem;
+    }
+
+    .modal-price-info {
+      background: rgba(255,215,0,0.1);
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+      color: var(--gold);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--panel-border);
+    }
+
+    .modal-check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ===== CONFIRM MODAL ===== */
+    .confirm-modal-box {
+      max-width: 460px;
+      text-align: center;
+      padding: 36px 32px;
+    }
+
+    .confirm-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      line-height: 1;
+    }
+
+    .confirm-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text-white);
+      margin-bottom: 10px;
+    }
+
+    .confirm-message {
+      font-size: 1rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .confirm-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .confirm-actions .btn {
+      min-width: 130px;
+      font-size: 1rem;
+    }
+
+    /* ===== FINAL SCREEN ===== */
+    #screen-final {
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    #screen-final h1 {
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--gold);
+      text-shadow: 0 0 30px rgba(255,215,0,0.6);
+      text-align: center;
+      margin-bottom: 40px;
+      letter-spacing: 3px;
+    }
+
+    .podium {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .podium-place {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .podium-avatar {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 900;
+    }
+
+    .podium-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .podium-score {
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--gold);
+    }
+
+    .podium-block {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px 8px 0 0;
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: rgba(0,0,0,0.5);
+    }
+
+    .podium-place.first .podium-block {
+      background: var(--gold);
+      width: 120px;
+      height: 140px;
+    }
+    .podium-place.second .podium-block {
+      background: #c0c0c0;
+      width: 100px;
+      height: 100px;
+    }
+    .podium-place.third .podium-block {
+      background: #cd7f32;
+      width: 100px;
+      height: 70px;
+    }
+
+    .podium-place.first .podium-avatar {
+      background: var(--gold);
+      color: #000;
+      width: 90px;
+      height: 90px;
+      border: 4px solid white;
+    }
+
+    .final-table {
+      width: 100%;
+      max-width: 700px;
+      border-collapse: collapse;
+      margin-bottom: 32px;
+    }
+
+    .final-table th {
+      background: rgba(255,215,0,0.2);
+      color: var(--gold);
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 1rem;
+      border-bottom: 2px solid var(--gold);
+    }
+
+    .final-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--panel-border);
+      font-size: 1rem;
+    }
+
+    .final-table tr:nth-child(even) td { background: rgba(255,255,255,0.03); }
+    .final-table tr.top-rank td { color: var(--gold); font-weight: 700; }
+
+    .final-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    /* ===== ACCUEIL ===== */
+    #screen-accueil {
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #screen-accueil::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(255,215,0,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .accueil-subtitle {
+      font-size: 1.2rem;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      font-weight: 600;
+    }
+
+    .accueil-title {
+      font-size: 7rem;
+      font-weight: 900;
+      color: var(--gold);
+      text-shadow:
+        0 0 30px rgba(255,215,0,0.7),
+        0 0 80px rgba(255,215,0,0.3),
+        0 6px 12px rgba(0,0,0,0.8);
+      line-height: 1;
+      margin-bottom: 12px;
+      letter-spacing: -2px;
+      animation: title-glow 2.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes title-glow {
+      from { text-shadow: 0 0 30px rgba(255,215,0,0.7), 0 0 80px rgba(255,215,0,0.3), 0 6px 12px rgba(0,0,0,0.8); }
+      to   { text-shadow: 0 0 60px rgba(255,215,0,1),   0 0 140px rgba(255,215,0,0.6), 0 6px 12px rgba(0,0,0,0.8); }
+    }
+
+    .accueil-exclaim {
+      font-size: 7rem;
+      color: white;
+      font-weight: 900;
+    }
+
+    .accueil-divider {
+      width: 200px;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 32px auto;
+    }
+
+    .accueil-tagline {
+      font-size: 1.4rem;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 56px;
+      font-style: italic;
+    }
+
+    .accueil-go-btn {
+      font-size: 2rem;
+      font-weight: 900;
+      padding: 20px 72px;
+      border-radius: 60px;
+      letter-spacing: 3px;
+      animation: pulse-gold 1.8s infinite;
+    }
+
+    /* ===== LIGHTBOX ===== */
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+      animation: lb-fade 0.18s ease;
+    }
+    #lightbox.visible { display: flex; }
+    @keyframes lb-fade {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    #lightbox img {
+      max-width: 90vw;
+      max-height: 88vh;
+      border-radius: 14px;
+      box-shadow: 0 20px 80px rgba(0,0,0,0.9);
+      object-fit: contain;
+      animation: lb-pop 0.2s cubic-bezier(0.175,0.885,0.32,1.275);
+      cursor: default;
+    }
+    @keyframes lb-pop {
+      from { transform: scale(0.85); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+    #lightbox-close {
+      position: fixed;
+      top: 18px;
+      right: 22px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.35);
+      color: #fff;
+      font-size: 1.4rem;
+      line-height: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.15s;
+      z-index: 501;
+      user-select: none;
+    }
+    #lightbox-close:hover {
+      background: rgba(255,255,255,0.3);
+      transform: scale(1.1);
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-in { animation: slideIn 0.4s ease forwards; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ============================= ACCUEIL ============================= -->
+<div id="screen-accueil" class="screen active">
+  <div class="accueil-subtitle">Le grand jeu</div>
+  <div class="accueil-title">Le Juste Prix<span class="accueil-exclaim"> !</span></div>
+  <div class="accueil-divider"></div>
+  <div class="accueil-tagline">Saurez-vous estimer le prix juste ?</div>
+  <button class="btn btn-primary accueil-go-btn" onclick="showScreen('config')">GO !</button>
+</div>
+
+<!-- ============================= CONFIG SCREEN ============================= -->
+<div id="screen-config" class="screen">
+  <h1>⚙ Configuration — Le Juste Prix</h1>
+
+  <div class="config-tabs">
+    <button class="config-tab active" onclick="showConfigTab('teams')">Équipes</button>
+    <button class="config-tab" onclick="showConfigTab('e1')">Épreuve 1</button>
+    <button class="config-tab" onclick="showConfigTab('e2')">Épreuve 2</button>
+    <button class="config-tab" onclick="showConfigTab('e3')">Épreuve 3</button>
+    <button class="config-tab" onclick="showConfigTab('e4')">Épreuve 4</button>
+  </div>
+
+  <div id="config-teams" class="config-panel active">
+    <h2>Noms des équipes</h2>
+    <div class="teams-grid" id="teams-grid"></div>
+  </div>
+
+  <div id="config-e1" class="config-panel">
+    <h2>Épreuve 1 — Prix en choix multiple (QCM)</h2>
+    <div id="config-e1-content"></div>
+  </div>
+
+  <div id="config-e2" class="config-panel">
+    <h2>Épreuve 2 — Le Juste Prix (estimation libre)</h2>
+    <div id="config-e2-content"></div>
+  </div>
+
+  <div id="config-e3" class="config-panel">
+    <h2>Épreuve 3 — Les Paniers Régionaux</h2>
+    <div id="config-e3-content"></div>
+  </div>
+
+  <div id="config-e4" class="config-panel">
+    <h2>Épreuve 4 — Finale « Plus ou Moins »</h2>
+    <div id="config-e4-content"></div>
+  </div>
+
+  <!-- Panneau session live -->
+  <div id="live-session-panel">
+    <div class="session-panel-row">
+      <div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">CODE PARTIE</div>
+        <div class="session-code-box" id="session-code-display">——</div>
+      </div>
+      <div class="session-info">
+        <div id="session-url-display" style="word-break:break-all;color:var(--gold);font-size:0.82rem;"></div>
+        <div id="session-conn-status" style="margin-top:4px;"></div>
+        <div class="session-conn-list" id="session-conn-list"></div>
+      </div>
+      <div>
+        <button class="btn btn-danger" style="font-size:0.82rem;padding:8px 14px;" onclick="destroySession()">✕ Fermer session</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="config-actions">
+    <button class="btn btn-danger" onclick="resetGame()">🗑 Réinitialiser</button>
+    <button class="btn" style="background:#c62828;color:#fff;" id="btn-create-session" onclick="createLiveSession()">📡 Créer session live</button>
+    <button class="btn btn-primary" onclick="startGame()">▶ Démarrer la partie</button>
+  </div>
+</div>
+
+<!-- ============================= INTRO MANCHE ============================= -->
+<div id="screen-intro" class="screen">
+  <div class="intro-number" id="intro-number">MANCHE 1 / 4</div>
+  <div class="intro-title" id="intro-title">Titre de la manche</div>
+  <div class="intro-divider"></div>
+  <div class="intro-description" id="intro-description">Description</div>
+  <div class="intro-points" id="intro-points">Points</div>
+  <div class="intro-speed-bonus" id="intro-speed-bonus" style="display:none;"></div>
+  <button class="btn btn-primary intro-start-btn" onclick="startManche()">Jouer ▶</button>
+</div>
+
+<!-- ============================= GAME SCREEN ============================= -->
+<div id="screen-game" class="screen">
+  <div class="game-layout">
+    <!-- Main area -->
+    <div class="game-main" id="game-main">
+      <div id="question-area"></div>
+      <!-- Panneau réponses live (affiché quand une question est ouverte) -->
+      <div id="live-answers-panel">
+        <div class="live-panel-header">
+          <span class="live-panel-title">🔴 RÉPONSES EN DIRECT</span>
+          <span class="live-count" id="live-count-display"></span>
+        </div>
+        <div class="live-answers-grid" id="live-answers-grid"></div>
+      </div>
+    </div>
+
+    <!-- Sidebar scoreboard -->
+    <div class="game-sidebar">
+      <div class="sidebar-title">CLASSEMENT</div>
+      <div class="score-list" id="score-list"></div>
+    </div>
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="game-bar">
+    <span class="progress-indicator" id="progress-indicator"></span>
+    <button class="btn btn-secondary" onclick="prevQuestion()">◀ Précédent</button>
+    <button class="btn btn-secondary" onclick="nextQuestion()">Suivant ▶</button>
+    <button class="btn btn-live" id="btn-repondez" onclick="openLiveQuestion()" style="display:none;">📡 RÉPONDEZ !</button>
+    <button class="btn btn-live-close btn" id="btn-close-question" onclick="closeLiveQuestion()" style="display:none;">🔒 Fermer saisie</button>
+    <button class="btn btn-info" onclick="openAnswerModal()">📝 Voir les réponses</button>
+    <button class="btn btn-secondary" onclick="showScreen('config')">⚙ Configuration</button>
+  </div>
+</div>
+
+<!-- ============================= LIGHTBOX ============================= -->
+<div id="lightbox" onclick="closeLightbox()">
+  <div id="lightbox-close" onclick="closeLightbox()" title="Fermer">✕</div>
+  <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()">
+</div>
+
+<!-- ============================= CORRECTION OVERLAY ============================= -->
+<canvas id="fireworks-canvas"></canvas>
+
+<!-- Banner "Juste Prix" au centre par-dessus le canvas -->
+<div id="exact-banner">
+  <div class="exact-banner-text">🎯 LE JUSTE PRIX !</div>
+  <div class="exact-banner-sub" id="exact-banner-teams"></div>
+</div>
+
+<div class="correction-overlay" id="correction-overlay">
+  <div id="correction-content"></div>
+  <button class="btn btn-primary" onclick="hideCorrection()" style="margin-top:16px; font-size:1.2rem; position:relative; z-index:202;">Continuer ▶</button>
+</div>
+
+<!-- ============================= CONFIRM MODAL ============================= -->
+<div class="modal-backdrop" id="confirm-modal">
+  <div class="modal-box confirm-modal-box">
+    <div class="confirm-icon" id="confirm-icon">⚠️</div>
+    <div class="confirm-title" id="confirm-title"></div>
+    <div class="confirm-message" id="confirm-message"></div>
+    <div class="confirm-actions">
+      <button class="btn btn-secondary" id="confirm-cancel">Annuler</button>
+      <button class="btn" id="confirm-ok">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================= ANSWER MODAL ============================= -->
+<div class="modal-backdrop" id="answer-modal">
+  <div class="modal-box">
+    <h2 id="modal-title">Saisie des réponses</h2>
+    <div id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="validateAnswers()">✅ Valider</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================= FINAL SCREEN ============================= -->
+<div id="screen-final" class="screen">
+  <canvas id="confetti-canvas" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
+  <h1 style="position:relative;z-index:1;">🏆 Résultats Finaux</h1>
+  <div class="podium" id="podium" style="position:relative;z-index:1;"></div>
+  <table class="final-table" id="final-table" style="position:relative;z-index:1;">
+    <thead>
+      <tr>
+        <th>Rang</th>
+        <th>Équipe</th>
+        <th>Score</th>
+      </tr>
+    </thead>
+    <tbody id="final-tbody"></tbody>
+  </table>
+  <div class="final-actions" style="position:relative;z-index:1;">
+    <button class="btn btn-danger" onclick="newGame()">🔄 Nouvelle partie</button>
+    <button class="btn btn-secondary" onclick="showScreen('config')">⚙ Configuration</button>
+  </div>
+</div>
+
+<script>
+// ======================================================================
+// STATE INITIAL
+// ======================================================================
+
+const defaultState = {
+  teams: ["Équipe 1","Équipe 2","Équipe 3","Équipe 4","Équipe 5","Équipe 6","Équipe 7","Équipe 8"],
+  scores: [0,0,0,0,0,0,0,0], // sera recalculé dynamiquement
+  currentScreen: "config",
+  currentEpreuve: 1,
+  currentQuestion: 0,
+
+  epreuves: {
+    e1: {
+      questions: [
+        { nom: "Bêtises de Cambrai 250g", image: "images/betises.jpg", source: "Carrefour Market Cambrai",
+          A: "3,85 €", B: "4,50 €", C: "5,75 €", D: "7,20 €", bonne: "A" },
+        { nom: "Chicorée LEROUX 520g", image: "images/chicoree.jpg", source: "Monoprix",
+          A: "1,45 €", B: "2,95 €", C: "4,20 €", D: "6,10 €", bonne: "B" },
+        { nom: "Camembert Graindorge 250g", image: "images/camembert.jpg", source: "Auchan.fr",
+          A: "2,50 €", B: "3,20 €", C: "3,98 €", D: "4,80 €", bonne: "C" },
+        { nom: "Porto Cruz 75cl", image: "images/porto.jpg", source: "Carrefour.fr",
+          A: "9,50 €", B: "11,25 €", C: "15,95 €", D: "22,00 €", bonne: "B" },
+        { nom: "Moutarde Dijon Fallot 250g", image: "images/moutarde.jpg", source: "Epicerieduterroir.fr",
+          A: "3,90 €", B: "6,50 €", C: "7,70 €", D: "9,70 €", bonne: "D" }
+      ]
+    },
+    e2: {
+      produits: [
+        { nom: "Gaufres fourrées lilloises 300g", image: "images/gaufres.jpg", source: "comptoirdesflandres.com", prix: 4.50 },
+        { nom: "Maroilles AOP Quart Fauquet 210g", image: "images/maroilles.jpg", source: "rogerdelille.com", prix: 4.90 },
+        { nom: "Sardines Tricana piquantes", image: "images/sardines.jpg", source: "Luisa-paixao.com", prix: 7.50 },
+        { nom: "Pastéis de nata Manteigaria", image: "images/pasteisdenata.jpg", source: "ubereats", prix: 10.00 },
+        { nom: "Béret français noir femme", image: "images/beret.jpg", source: "Leberetfrancais.com", prix: 42.00 }
+      ]
+    },
+    e3: {
+      paniers: [
+        {
+          nom: "Panier Mixte 1",
+          produits: [
+            { nom: "Calissons d'Aix Du Roy René (36 pcs)", image: "images/calissons.jpg", source: "Roy René", prix: 34.50 },
+            { nom: "Francesinha Yuko Tavern", image: "images/francesinha.jpg", source: "Yuko.com", prix: 11.50 },
+            { nom: "12 timbres Marianne standard", image: "images/timbres.jpg", source: "Laposte.fr", prix: 18.24 }
+          ],
+          prixTotal: 64
+        },
+        {
+          nom: "Panier Mixte 2",
+          produits: [
+            { nom: "Azulejo Padrão 14x14cm", image: "images/azulejo.jpg", source: "Luisa-paixao.com", prix: 25.00 },
+            { nom: "Tirelire écureuil céramique CE", image: "images/ecureuil.jpg", source: "Leboncoin.fr", prix: 18.00 }
+          ],
+          prixTotal: 44
+        },
+        {
+          nom: "Panier Mixte 3",
+          produits: [
+            { nom: "Macarons LADURÉE 12 pcs", image: "images/macarons.jpg", source: "laduree.com", prix: 39.00 },
+            { nom: "26 Pièces chocolat Leonidas 200g", image: "images/pieces.jpg", source: "Leonidas-choco.com", prix: 17.85 }
+          ],
+          prixTotal: 57
+        }
+      ]
+    },
+    e4: {
+      produits: [
+        { nom: "iPhone Duo Pliable 256 Go", image: "images/iphone.jpg", source: "Apple.com", propose: 2390, reel: 2339 },
+        { nom: "Tour Eiffel LEGO 10001 pièces", image: "images/toureiffel.jpg", source: "Lego.com", propose: 500, reel: 629.99 },
+        { nom: "Souris ergonomique sans fil Logitech", image: "images/souris.jpg", source: "Fnac", propose: 35, reel: 46.99 },
+        { nom: "Casque-micro sans fil JABRA", image: "images/casque.jpg", source: "Fnac", propose: 250, reel: 196.19 },
+        { nom: "Madame Popcorn 2kg", image: "images/popcorn.jpg", source: "Madame Popcorn Aix", propose: 70, reel: 52 }
+      ]
+    }
+  },
+
+  answers: null,  // généré dynamiquement après chargement
+  revealed: {
+    e1: Array(5).fill(false),
+    e2: Array(5).fill(false),
+    e3: Array(3).fill(false),
+    e4: Array(5).fill(false)
+  }
+};
+
+// ======================================================================
+// HELPERS DYNAMIQUES (nombre d'équipes variable)
+// ======================================================================
+
+function makeAnswers(n) {
+  return {
+    e1: Array(5).fill(null).map(() => Array(n).fill(null)),
+    e2: Array(5).fill(null).map(() => Array(n).fill(null)),
+    e3: Array(3).fill(null).map(() => Array(n).fill(null)),
+    e4: Array(5).fill(null).map(() => Array(n).fill(null))
+  };
+}
+
+function makeScores(n) {
+  return Array(n).fill(0);
+}
+
+// Synchronise answers/scores quand le nombre d'équipes change
+function syncAnswersToTeams() {
+  const n = state.teams.length;
+  // scores : étendre ou tronquer
+  while (state.scores.length < n) state.scores.push(0);
+  state.scores = state.scores.slice(0, n);
+  // answers : étendre ou tronquer chaque ligne
+  ['e1','e2','e3','e4'].forEach(ek => {
+    state.answers[ek].forEach(row => {
+      while (row.length < n) row.push(null);
+      row.splice(n);
+    });
+  });
+}
+
+// ======================================================================
+// PERSISTENCE
+// ======================================================================
+
+let state;
+
+function saveState() {
+  try {
+    localStorage.setItem('ljp_state', JSON.stringify(state));
+  } catch(e) { console.warn('localStorage unavailable'); }
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('ljp_state');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state = deepMerge(JSON.parse(JSON.stringify(defaultState)), parsed);
+    } else {
+      state = JSON.parse(JSON.stringify(defaultState));
+    }
+  } catch(e) {
+    state = JSON.parse(JSON.stringify(defaultState));
+  }
+  // Initialiser answers si absent (premier chargement ou migration)
+  if (!state.answers) {
+    state.answers = makeAnswers(state.teams.length);
+  }
+  // Synchroniser au cas où le nombre d'équipes aurait changé
+  syncAnswersToTeams();
+}
+
+function deepMerge(target, source) {
+  for (const key of Object.keys(source)) {
+    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      if (!target[key]) target[key] = {};
+      deepMerge(target[key], source[key]);
+    } else {
+      target[key] = source[key];
+    }
+  }
+  return target;
+}
+
+// ======================================================================
+// NAVIGATION
+// ======================================================================
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  state.currentScreen = name;
+  saveState();
+
+  if (name === 'config') renderConfig();
+  if (name === 'game') renderGame();
+  if (name === 'final') renderFinal();
+  // 'accueil' : pas de rendu dynamique nécessaire
+}
+
+// ======================================================================
+// INTRO MANCHE
+// ======================================================================
+
+const MANCHE_INFO = {
+  1: {
+    titre: "Prix en Choix Multiple",
+    description: "Un produit s'affiche à l'écran. Quatre prix sont proposés : A, B, C ou D. Chaque équipe choisit le bon prix. Rapide, sans filet !",
+    points: "1 point par bonne réponse — 5 questions"
+  },
+  2: {
+    titre: "Le Juste Prix",
+    description: "Un produit s'affiche. Les équipes écrivent librement le prix qu'elles lui attribuent. L'équipe la plus proche remporte les points — et si vous trouvez le prix exact, c'est le jackpot !",
+    points: "3 pts à la plus proche · +5 pts si prix exact — 5 produits"
+  },
+  3: {
+    titre: "Les Paniers Mixtes",
+    description: "Trois paniers surprises sont présentés avec leurs produits. Les équipes estiment le prix total de chaque panier. Qui a le meilleur sens du marché ? ATTENTION ARRONDI A L'EURO LE + PROCHE ! (pas de virgule)",
+    points: "5 pts à la plus proche · +10 pts si prix exact — 3 paniers"
+  },
+  4: {
+    titre: "Plus ou Moins ?",
+    description: "Un produit est affiché avec un prix proposé. Les équipes doivent dire si le prix réel est plus élevé (+) ou moins élevé (−). Dix points par bonne réponse. La finale !",
+    points: "10 pts par bonne réponse — 5 produits"
+  }
+};
+
+function showIntroManche(numEpreuve) {
+  const info = MANCHE_INFO[numEpreuve];
+  document.getElementById('intro-number').textContent = `MANCHE ${numEpreuve} / 4`;
+  document.getElementById('intro-title').textContent = info.titre;
+  document.getElementById('intro-description').textContent = info.description;
+  document.getElementById('intro-points').textContent = info.points;
+
+  // Bloc bonus rapidité — affiché uniquement si session live active
+  const speedEl = document.getElementById('intro-speed-bonus');
+  if (liveSession) {
+    speedEl.style.display = 'flex';
+    speedEl.innerHTML = `
+      <span>⚡ Bonus rapidité (1ère bonne réponse) :</span>
+      <div class="speed-bonus-pills">
+        <span class="speed-bonus-pill">🥇 +3 pts</span>
+        <span class="speed-bonus-pill">🥈 +2 pts</span>
+        <span class="speed-bonus-pill">🥉 +1 pt</span>
+      </div>
+    `;
+  } else {
+    speedEl.style.display = 'none';
+  }
+
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-intro').classList.add('active');
+}
+
+function startManche() {
+  showScreen('game');
+}
+
+// ======================================================================
+// CONFIG SCREEN
+// ======================================================================
+
+function showConfigTab(tab) {
+  if (['e1','e2','e3','e4'].includes(tab)) {
+    showConfirm({
+      icon: '👁️',
+      title: 'Attention — Réponses visibles',
+      message: 'Cette section affiche les prix réels et les bonnes réponses. Assurez-vous que les participants ne peuvent pas voir l\'écran avant de continuer.',
+      labelOk: 'Afficher quand même',
+      danger: false,
+      onOk: () => applyConfigTab(tab)
+    });
+  } else {
+    applyConfigTab(tab);
+  }
+}
+
+function applyConfigTab(tab) {
+  document.querySelectorAll('.config-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.config-panel').forEach(p => p.classList.remove('active'));
+
+  const tabIdx = ['teams','e1','e2','e3','e4'].indexOf(tab);
+  document.querySelectorAll('.config-tab')[tabIdx].classList.add('active');
+  document.getElementById('config-' + tab).classList.add('active');
+}
+
+function renderConfig() {
+  renderTeamsConfig();
+  renderE1Config();
+  renderE2Config();
+  renderE3Config();
+  renderE4Config();
+}
+
+function renderTeamsConfig() {
+  const grid = document.getElementById('teams-grid');
+  const n = state.teams.length;
+
+  let html = '';
+  state.teams.forEach((name, i) => {
+    const removeBtn = n > 2
+      ? '<button class="team-remove-btn" onclick="removeTeam(' + i + ')" title="Supprimer">✕</button>'
+      : '';
+    html += '<div class="team-input-wrap">'
+      + '<label>Équipe ' + (i+1) + ' ' + removeBtn + '</label>'
+      + '<input type="text" value="' + escHtml(name) + '"'
+      + ' onchange="state.teams[' + i + ']=this.value; saveState(); renderScoreboard();"'
+      + ' placeholder="Équipe ' + (i+1) + '">'
+      + '</div>';
+  });
+
+  html += '<div class="team-add-wrap">'
+    + '<button onclick="addTeam()" class="btn btn-success team-add-btn">+ Ajouter une équipe</button>'
+    + '</div>';
+
+  grid.innerHTML = html;
+}
+
+function addTeam() {
+  const n = state.teams.length;
+  state.teams.push('Équipe ' + (n + 1));
+  state.scores.push(0);
+  // Étendre chaque ligne de answers
+  ['e1','e2','e3','e4'].forEach(ek => {
+    state.answers[ek].forEach(row => row.push(null));
+  });
+  saveState();
+  renderTeamsConfig();
+  renderScoreboard();
+}
+
+function removeTeam(idx) {
+  if (state.teams.length <= 2) return;
+  showConfirm({
+    icon: '🗑️',
+    title: 'Supprimer cette équipe ?',
+    message: `"${state.teams[idx]}" sera supprimée. Ses scores et réponses seront perdus.`,
+    labelOk: 'Supprimer',
+    danger: true,
+    onOk: () => {
+      state.teams.splice(idx, 1);
+      state.scores.splice(idx, 1);
+      ['e1','e2','e3','e4'].forEach(ek => {
+        state.answers[ek].forEach(row => row.splice(idx, 1));
+      });
+      saveState();
+      renderTeamsConfig();
+      renderScoreboard();
+    }
+  });
+}
+
+function renderE1Config() {
+  const cont = document.getElementById('config-e1-content');
+  cont.innerHTML = state.epreuves.e1.questions.map((q, i) => `
+    <div class="product-block">
+      <h3>Question ${i+1}</h3>
+      <div class="product-grid">
+        <div class="field-group">
+          <label>Nom du produit</label>
+          <input type="text" value="${escHtml(q.nom)}"
+            onchange="state.epreuves.e1.questions[${i}].nom=this.value;saveState();">
+        </div>
+        <div class="field-group">
+          <label>Image (chemin)</label>
+          <input type="text" value="${escHtml(q.image)}"
+            onchange="state.epreuves.e1.questions[${i}].image=this.value;saveState();">
+        </div>
+      </div>
+      <div class="field-group" style="margin-bottom:10px;">
+        <label>Source</label>
+        <input type="text" value="${escHtml(q.source||'')}"
+          onchange="state.epreuves.e1.questions[${i}].source=this.value;saveState();"
+          placeholder="Ex : Carrefour, amazon.fr…">
+      </div>
+      <div class="qcm-prices">
+        ${['A','B','C','D'].map(letter => `
+          <div class="field-group">
+            <label>Prix ${letter}</label>
+            <input type="text" value="${escHtml(q[letter])}"
+              onchange="state.epreuves.e1.questions[${i}]['${letter}']=this.value;saveState();">
+          </div>
+        `).join('')}
+        <div class="field-group">
+          <label>Bonne réponse</label>
+          <div style="display:flex;gap:6px;padding-top:8px;">
+            ${['A','B','C','D'].map(letter => `
+              <label style="display:flex;align-items:center;gap:3px;cursor:pointer;">
+                <input type="radio" name="bonne-e1-${i}" value="${letter}"
+                  ${q.bonne===letter?'checked':''}
+                  onchange="state.epreuves.e1.questions[${i}].bonne='${letter}';saveState();">
+                ${letter}
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderE2Config() {
+  const cont = document.getElementById('config-e2-content');
+  cont.innerHTML = state.epreuves.e2.produits.map((p, i) => `
+    <div class="product-block">
+      <h3>Produit ${i+1}</h3>
+      <div class="product-grid">
+        <div class="field-group">
+          <label>Nom du produit</label>
+          <input type="text" value="${escHtml(p.nom)}"
+            onchange="state.epreuves.e2.produits[${i}].nom=this.value;saveState();">
+        </div>
+        <div class="field-group">
+          <label>Image (chemin)</label>
+          <input type="text" value="${escHtml(p.image)}"
+            onchange="state.epreuves.e2.produits[${i}].image=this.value;saveState();">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
+        <div class="field-group">
+          <label>Source</label>
+          <input type="text" value="${escHtml(p.source||'')}"
+            onchange="state.epreuves.e2.produits[${i}].source=this.value;saveState();"
+            placeholder="Ex : Monoprix, amazon.fr…">
+        </div>
+        <div class="field-group">
+          <label>Prix réel (€)</label>
+          <input type="number" step="0.01" value="${p.prix}"
+            onchange="state.epreuves.e2.produits[${i}].prix=parseFloat(this.value)||0;saveState();">
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderE3Config() {
+  const cont = document.getElementById('config-e3-content');
+  cont.innerHTML = state.epreuves.e3.paniers.map((pan, i) => `
+    <div class="product-block">
+      <h3>Panier ${i+1}</h3>
+      <div class="field-group" style="margin-bottom:10px;">
+        <label>Nom du panier</label>
+        <input type="text" value="${escHtml(pan.nom)}"
+          onchange="state.epreuves.e3.paniers[${i}].nom=this.value;saveState();">
+      </div>
+      <div class="panier-products">
+        ${pan.produits.map((pr, j) => `
+          <div class="product-row" style="grid-template-columns:2fr 1fr 1fr 1fr;">
+            <div class="field-group">
+              <label>Produit ${j+1}</label>
+              <input type="text" value="${escHtml(pr.nom)}"
+                onchange="state.epreuves.e3.paniers[${i}].produits[${j}].nom=this.value;saveState();">
+            </div>
+            <div class="field-group">
+              <label>Image (chemin)</label>
+              <input type="text" value="${escHtml(pr.image||'')}"
+                onchange="state.epreuves.e3.paniers[${i}].produits[${j}].image=this.value;saveState();"
+                placeholder="images/xxx.jpg">
+            </div>
+            <div class="field-group">
+              <label>Source</label>
+              <input type="text" value="${escHtml(pr.source||'')}"
+                onchange="state.epreuves.e3.paniers[${i}].produits[${j}].source=this.value;saveState();"
+                placeholder="Ex : Fnac, amazon.fr…">
+            </div>
+            <div class="field-group">
+              <label>Prix (€)</label>
+              <input type="number" step="0.01" value="${pr.prix}"
+                onchange="state.epreuves.e3.paniers[${i}].produits[${j}].prix=parseFloat(this.value)||0;saveState();">
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="field-group" style="max-width:200px;margin-top:8px;">
+        <label>Prix total réel (€)</label>
+        <input type="number" step="0.01" value="${pan.prixTotal}"
+          onchange="state.epreuves.e3.paniers[${i}].prixTotal=parseFloat(this.value)||0;saveState();">
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderE4Config() {
+  const cont = document.getElementById('config-e4-content');
+  cont.innerHTML = state.epreuves.e4.produits.map((p, i) => `
+    <div class="product-block">
+      <h3>Produit ${i+1}</h3>
+      <div class="product-grid">
+        <div class="field-group">
+          <label>Nom du produit</label>
+          <input type="text" value="${escHtml(p.nom)}"
+            onchange="state.epreuves.e4.produits[${i}].nom=this.value;saveState();">
+        </div>
+        <div class="field-group">
+          <label>Image (chemin)</label>
+          <input type="text" value="${escHtml(p.image)}"
+            onchange="state.epreuves.e4.produits[${i}].image=this.value;saveState();">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px;">
+        <div class="field-group">
+          <label>Source</label>
+          <input type="text" value="${escHtml(p.source||'')}"
+            onchange="state.epreuves.e4.produits[${i}].source=this.value;saveState();"
+            placeholder="Ex : Fnac, lego.com…">
+        </div>
+        <div class="field-group">
+          <label>Prix proposé (€)</label>
+          <input type="number" step="0.01" value="${p.propose}"
+            onchange="state.epreuves.e4.produits[${i}].propose=parseFloat(this.value)||0;saveState();">
+        </div>
+        <div class="field-group">
+          <label>Prix réel (€)</label>
+          <input type="number" step="0.01" value="${p.reel}"
+            onchange="state.epreuves.e4.produits[${i}].reel=parseFloat(this.value)||0;saveState();">
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function startGame() {
+  // Validate E4: propose !== reel
+  const e4problems = state.epreuves.e4.produits.filter(p => p.propose === p.reel);
+  if (e4problems.length > 0) {
+    alert(`Épreuve 4 : le prix proposé ne peut pas être identique au prix réel pour : ${e4problems.map(p=>p.nom).join(', ')}`);
+    return;
+  }
+  state.currentEpreuve = 1;
+  state.currentQuestion = 0;
+  saveState();
+  showIntroManche(1);
+}
+
+function resetGame() {
+  showConfirm({
+    icon: '⚠️',
+    title: 'Tout réinitialiser ?',
+    message: 'Scores, réponses et configuration seront effacés. Cette action est irréversible.',
+    labelOk: 'Réinitialiser',
+    danger: true,
+    onOk: () => {
+      localStorage.removeItem('ljp_state');
+      state = JSON.parse(JSON.stringify(defaultState));
+      state.answers = makeAnswers(state.teams.length);
+      renderConfig();
+      showScreen('accueil');
+    }
+  });
+}
+
+// ======================================================================
+// GAME SCREEN
+// ======================================================================
+
+function renderGame() {
+  renderQuestion();
+  renderScoreboard();
+}
+
+function getEpreuveKey() {
+  return 'e' + state.currentEpreuve;
+}
+
+function getMaxQuestions() {
+  const ek = getEpreuveKey();
+  if (ek === 'e1') return state.epreuves.e1.questions.length;
+  if (ek === 'e2') return state.epreuves.e2.produits.length;
+  if (ek === 'e3') return state.epreuves.e3.paniers.length;
+  if (ek === 'e4') return state.epreuves.e4.produits.length;
+  return 0;
+}
+
+function renderQuestion() {
+  const ek = getEpreuveKey();
+  const q = state.currentQuestion;
+  const max = getMaxQuestions();
+  const revealed = state.revealed[ek][q];
+
+  // Progress
+  const epreuveNames = ['', 'Épreuve 1 — QCM', 'Épreuve 2 — Le Juste Prix',
+                         'Épreuve 3 — Paniers Régionaux', 'Épreuve 4 — Plus ou Moins'];
+  document.getElementById('progress-indicator').textContent =
+    `${epreuveNames[state.currentEpreuve]} — Question ${q+1}/${max}`;
+
+
+
+  const area = document.getElementById('question-area');
+
+  if (state.currentEpreuve === 1) renderE1Question(area, q, revealed);
+  else if (state.currentEpreuve === 2) renderE2Question(area, q, revealed);
+  else if (state.currentEpreuve === 3) renderE3Question(area, q, revealed);
+  else if (state.currentEpreuve === 4) renderE4Question(area, q, revealed);
+}
+
+function renderE1Question(area, q, revealed) {
+  const question = state.epreuves.e1.questions[q];
+  area.innerHTML = `
+    <div class="animate-in">
+      <span class="epreuve-badge">ÉPREUVE 1 — QCM</span>
+      <div class="question-title">${escHtml(question.nom)}</div>
+      ${question.source ? `<div class="product-source">${escHtml(question.source)}</div>` : ''}
+      <div class="product-image-wrap">${imageTag(question.image)}</div>
+      <div class="qcm-choices">
+        ${['A','B','C','D'].map(letter => `
+          <div class="choice-btn ${letter} ${revealed && letter===question.bonne ? 'correct-highlight' : ''}">
+            <span class="choice-letter">${letter}</span>
+            <span>${escHtml(question[letter])}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderE2Question(area, q, revealed) {
+  const produit = state.epreuves.e2.produits[q];
+  area.innerHTML = `
+    <div class="animate-in">
+      <span class="epreuve-badge">ÉPREUVE 2 — LE JUSTE PRIX</span>
+      <div class="question-title">${escHtml(produit.nom)}</div>
+      ${produit.source ? `<div class="product-source">${escHtml(produit.source)}</div>` : ''}
+      <div class="product-image-wrap">${imageTag(produit.image)}</div>
+      <div class="estimation-display">
+        <div class="estimation-label">Quel est le prix de ce produit ?</div>
+        ${revealed ? `<div class="correction-price" style="font-size:3.5rem;color:var(--correct-green);margin-top:12px;">${formatPrice(produit.prix)}</div>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function renderE3Question(area, q, revealed) {
+  const panier = state.epreuves.e3.paniers[q];
+  const cards = panier.produits.map(pr => {
+    const imgSrc = pr.image || '';
+    const imgHtml = imgSrc
+      ? `<img src="${escHtml(imgSrc)}" alt="${escHtml(pr.nom)}" onclick="openLightbox(this.src)" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'>?</div>'">`
+      : '<div class="no-image">?</div>';
+    const priceHtml = revealed
+      ? `<span class="panier-item-price">${formatPrice(pr.prix)}</span>`
+      : `<span class="panier-item-price hidden">??? €</span>`;
+    const sourceHtml = pr.source ? `<div class="panier-item-source">📍 ${escHtml(pr.source)}</div>` : '';
+    return `<div class="panier-item-card">${imgHtml}<div class="panier-item-name">${escHtml(pr.nom)}</div>${sourceHtml}${priceHtml}</div>`;
+  }).join('');
+
+  area.innerHTML = `
+    <div class="animate-in">
+      <span class="epreuve-badge">ÉPREUVE 3 — PANIERS MIXTES</span>
+      <div class="question-title">${escHtml(panier.nom)}</div>
+      <div class="panier-items">${cards}</div>
+      <div class="estimation-display">
+        <div class="estimation-label">Quel est le prix total de ce panier ? (Arrondi, sans virgule)</div>
+        ${revealed ? `<div style="font-size:3rem;font-weight:900;color:var(--correct-green);margin-top:12px;">${panier.prixTotal} €</div>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function renderE4Question(area, q, revealed) {
+  const produit = state.epreuves.e4.produits[q];
+  const bonneReponse = produit.reel > produit.propose ? '+' : '-';
+  area.innerHTML = `
+    <div class="animate-in" style="display:flex;flex-direction:column;align-items:center;">
+      <div style="width:100%;text-align:left;">
+        <span class="epreuve-badge">ÉPREUVE 4 — PLUS OU MOINS ?</span>
+        <div class="question-title">${escHtml(produit.nom)}</div>
+        ${produit.source ? `<div class="product-source">${escHtml(produit.source)}</div>` : ''}
+      </div>
+      <div class="e4-layout">
+        <div class="product-image-wrap e4-image">${imageTag(produit.image)}</div>
+        <div class="e4-right">
+          <div class="e4-proposed-label">Prix proposé</div>
+          <div class="e4-proposed-price">${formatPrice(produit.propose)}</div>
+          <div class="e4-signs">
+            <div class="sign-btn plus ${revealed && bonneReponse==='+' ? 'correct-highlight' : ''}">+</div>
+            <div class="sign-btn minus ${revealed && bonneReponse==='-' ? 'correct-highlight' : ''}">−</div>
+          </div>
+          ${revealed ? `<div class="e4-real-price">Prix réel : <strong>${formatPrice(produit.reel)}</strong></div>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function resetLivePanel() {
+  liveQuestionOpen = false;
+  liveLastAnswers = {};
+  liveSpeedBonus = {};
+  const panel = document.getElementById('live-answers-panel');
+  if (panel) panel.classList.remove('visible');
+  const grid = document.getElementById('live-answers-grid');
+  if (grid) grid.innerHTML = '';
+  const countEl = document.getElementById('live-count-display');
+  if (countEl) countEl.textContent = '';
+  updateLiveButtons();
+}
+
+function prevQuestion() {
+  resetLivePanel();
+  if (state.currentQuestion > 0) {
+    state.currentQuestion--;
+    saveState();
+    renderQuestion();
+  } else if (state.currentEpreuve > 1) {
+    state.currentEpreuve--;
+    state.currentQuestion = getMaxQuestions() - 1;
+    saveState();
+    renderQuestion();
+  }
+}
+
+function nextQuestion() {
+  resetLivePanel();
+  const max = getMaxQuestions();
+  if (state.currentQuestion < max - 1) {
+    state.currentQuestion++;
+    saveState();
+    renderQuestion();
+  } else if (state.currentEpreuve < 4) {
+    state.currentEpreuve++;
+    state.currentQuestion = 0;
+    saveState();
+    showIntroManche(state.currentEpreuve);
+  } else {
+    // End of game
+    showConfirm({
+      icon: '🏆',
+      title: 'Fin des épreuves !',
+      message: 'Toutes les manches sont terminées. Afficher le classement final ?',
+      labelOk: 'Voir les résultats',
+      danger: false,
+      onOk: () => showScreen('final')
+    });
+  }
+}
+
+// ======================================================================
+// SCOREBOARD
+// ======================================================================
+
+function renderScoreboard() {
+  const list = document.getElementById('score-list');
+  if (!list) return;
+
+  const ranked = getRankedTeams();
+  list.innerHTML = ranked.map(item => `
+    <div class="score-item ${item.rank === 1 ? 'leader' : ''}">
+      <span class="score-rank ${item.rank === 1 ? 'gold-rank' : ''}">${item.rank === 1 ? '🥇' : item.rank}</span>
+      <span class="score-name">${escHtml(item.name)}</span>
+      <span class="score-value">${item.score}</span>
+    </div>
+  `).join('');
+}
+
+function getRankedTeams() {
+  const teams = state.teams.map((name, i) => ({ name, score: state.scores[i], idx: i }));
+  teams.sort((a, b) => b.score - a.score);
+  let rank = 1;
+  teams.forEach((t, i) => {
+    if (i > 0 && teams[i-1].score > t.score) rank = i + 1;
+    t.rank = rank;
+  });
+  return teams;
+}
+
+// ======================================================================
+// ANSWER MODAL
+// ======================================================================
+
+function openAnswerModal() {
+  const ek = getEpreuveKey();
+  const q = state.currentQuestion;
+  const modal = document.getElementById('answer-modal');
+  const body = document.getElementById('modal-body');
+  const title = document.getElementById('modal-title');
+
+  if (state.currentEpreuve === 1) {
+    title.textContent = `Épreuve 1 — Question ${q+1} : saisie des réponses`;
+    body.innerHTML = renderModalE1(q);
+  } else if (state.currentEpreuve === 2) {
+    title.textContent = `Épreuve 2 — Produit ${q+1} : saisie des réponses`;
+    body.innerHTML = renderModalE2(q);
+  } else if (state.currentEpreuve === 3) {
+    title.textContent = `Épreuve 3 — Panier ${q+1} : saisie des réponses`;
+    body.innerHTML = renderModalE3(q);
+  } else if (state.currentEpreuve === 4) {
+    title.textContent = `Épreuve 4 — Produit ${q+1} : saisie des réponses`;
+    body.innerHTML = renderModalE4(q);
+  }
+
+  modal.classList.add('visible');
+}
+
+function renderModalE1(q) {
+  const existing = state.answers.e1[q];
+  return state.teams.map((name, i) => `
+    <div class="modal-team-row">
+      <span class="modal-team-name">${escHtml(name)}</span>
+      <div class="modal-radio-group">
+        ${['A','B','C','D'].map(letter => `
+          <label>
+            <input type="radio" name="e1-q${q}-team${i}" value="${letter}"
+              ${existing[i]===letter?'checked':''}>
+            ${letter}
+          </label>
+        `).join('')}
+        <label>
+          <input type="radio" name="e1-q${q}-team${i}" value="null"
+            ${!existing[i]?'checked':''}>
+          —
+        </label>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderModalE2(q) {
+  const existing = state.answers.e2[q];
+  return `
+    ${state.teams.map((name, i) => `
+      <div class="modal-team-row" style="flex-wrap:wrap;gap:8px;">
+        <span class="modal-team-name">${escHtml(name)}</span>
+        <span>Estimation :</span>
+        <input type="number" step="0.01" min="0" class="modal-number-input"
+          id="e2-q${q}-team${i}" value="${existing[i] !== null ? existing[i] : ''}">
+        <span>€</span>
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderModalE3(q) {
+  const existing = state.answers.e3[q];
+  return `
+    ${state.teams.map((name, i) => `
+      <div class="modal-team-row" style="flex-wrap:wrap;gap:8px;">
+        <span class="modal-team-name">${escHtml(name)}</span>
+        <span>Estimation :</span>
+        <input type="number" step="0.01" min="0" class="modal-number-input"
+          id="e3-q${q}-team${i}" value="${existing[i] !== null ? existing[i] : ''}">
+        <span>€</span>
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderModalE4(q) {
+  const existing = state.answers.e4[q];
+  return state.teams.map((name, i) => `
+    <div class="modal-team-row">
+      <span class="modal-team-name">${escHtml(name)}</span>
+      <div class="modal-radio-group">
+        <label>
+          <input type="radio" name="e4-q${q}-team${i}" value="+"
+            ${existing[i]==='+'?'checked':''}>
+          ➕ Plus
+        </label>
+        <label>
+          <input type="radio" name="e4-q${q}-team${i}" value="-"
+            ${existing[i]==='-'?'checked':''}>
+          ➖ Moins
+        </label>
+        <label>
+          <input type="radio" name="e4-q${q}-team${i}" value="null"
+            ${!existing[i]?'checked':''}>
+          —
+        </label>
+      </div>
+    </div>
+  `).join('');
+}
+
+function closeModal() {
+  document.getElementById('answer-modal').classList.remove('visible');
+}
+
+function validateAnswers() {
+  const ek = getEpreuveKey();
+  const q = state.currentQuestion;
+
+  // Soustraire les anciens points si déjà corrigé
+  if (state.revealed[ek][q]) {
+    subtractPoints(ek, q);
+  }
+
+  if (state.currentEpreuve === 1) collectE1Answers(q);
+  else if (state.currentEpreuve === 2) collectE2Answers(q);
+  else if (state.currentEpreuve === 3) collectE3Answers(q);
+  else if (state.currentEpreuve === 4) collectE4Answers(q);
+
+  // Recalcul des points
+  calculatePoints(ek, q);
+  state.revealed[ek][q] = true;
+  saveState();
+  closeModal();
+  renderQuestion();
+  renderScoreboard();
+  showCorrection();
+}
+
+function collectE1Answers(q) {
+  state.teams.forEach((_, i) => {
+    const radios = document.querySelectorAll(`input[name="e1-q${q}-team${i}"]`);
+    let val = null;
+    radios.forEach(r => { if (r.checked && r.value !== 'null') val = r.value; });
+    state.answers.e1[q][i] = val;
+  });
+}
+
+function collectE2Answers(q) {
+  state.teams.forEach((_, i) => {
+    const inp = document.getElementById(`e2-q${q}-team${i}`);
+    const val = inp && inp.value !== '' ? parseFloat(inp.value) : null;
+    state.answers.e2[q][i] = val;
+  });
+}
+
+function collectE3Answers(q) {
+  state.teams.forEach((_, i) => {
+    const inp = document.getElementById(`e3-q${q}-team${i}`);
+    const val = inp && inp.value !== '' ? parseFloat(inp.value) : null;
+    state.answers.e3[q][i] = val;
+  });
+}
+
+function collectE4Answers(q) {
+  state.teams.forEach((_, i) => {
+    const radios = document.querySelectorAll(`input[name="e4-q${q}-team${i}"]`);
+    let val = null;
+    radios.forEach(r => { if (r.checked && r.value !== 'null') val = r.value; });
+    state.answers.e4[q][i] = val;
+  });
+}
+
+// ======================================================================
+// SCORE CALCULATION
+// ======================================================================
+
+function subtractPoints(ek, q) {
+  const pts = computePoints(ek, q);
+  state.teams.forEach((_, i) => {
+    state.scores[i] = Math.max(0, state.scores[i] - (pts[i] || 0));
+  });
+}
+
+function calculatePoints(ek, q) {
+  const pts = computePoints(ek, q);
+  state.teams.forEach((_, i) => {
+    state.scores[i] += (pts[i] || 0);
+  });
+}
+
+function computePoints(ek, q) {
+  const pts = Array(state.teams.length).fill(0);
+
+  if (ek === 'e1') {
+    const bonne = state.epreuves.e1.questions[q].bonne;
+    state.teams.forEach((_, i) => {
+      if (state.answers.e1[q][i] === bonne) pts[i] = 1;
+    });
+  }
+
+  else if (ek === 'e2') {
+    const prixReel = state.epreuves.e2.produits[q].prix;
+    const answers = state.answers.e2[q];
+    const validAnswers = answers.map((a, i) => a !== null ? { i, ecart: Math.abs(a - prixReel) } : null).filter(Boolean);
+    if (validAnswers.length > 0) {
+      const minEcart = Math.min(...validAnswers.map(a => a.ecart));
+      validAnswers.forEach(a => {
+        if (a.ecart === minEcart) pts[a.i] += 3;
+        if (answers[a.i] !== null && Math.abs(answers[a.i] - prixReel) < 0.001) pts[a.i] += 5;
+      });
+    }
+  }
+
+  else if (ek === 'e3') {
+    const prixTotal = state.epreuves.e3.paniers[q].prixTotal;
+    const answers = state.answers.e3[q];
+    const validAnswers = answers.map((a, i) => a !== null ? { i, ecart: Math.abs(a - prixTotal) } : null).filter(Boolean);
+    if (validAnswers.length > 0) {
+      const minEcart = Math.min(...validAnswers.map(a => a.ecart));
+      validAnswers.forEach(a => {
+        if (a.ecart === minEcart) pts[a.i] += 5;
+        if (answers[a.i] !== null && Math.abs(answers[a.i] - prixTotal) < 0.001) pts[a.i] += 10;
+      });
+    }
+  }
+
+  else if (ek === 'e4') {
+    const prod = state.epreuves.e4.produits[q];
+    const bonne = prod.reel > prod.propose ? '+' : '-';
+    state.teams.forEach((_, i) => {
+      if (state.answers.e4[q][i] === bonne) pts[i] = 10;
+    });
+  }
+
+  return pts;
+}
+
+// ======================================================================
+// CORRECTION
+// ======================================================================
+
+function showCorrection() {
+  const ek = getEpreuveKey();
+  const q = state.currentQuestion;
+  const pts = computePoints(ek, q);
+
+  let priceLabel = '';
+  let hasExact = false; // déclenche feux d'artifice
+
+  if (ek === 'e1') {
+    const question = state.epreuves.e1.questions[q];
+    priceLabel = `Bonne réponse : ${question.bonne} — ${question[question.bonne]}`;
+  } else if (ek === 'e2') {
+    const prixReel = state.epreuves.e2.produits[q].prix;
+    priceLabel = `Prix réel : ${formatPrice(prixReel)}`;
+    hasExact = state.answers.e2[q].some(a => a !== null && Math.abs(a - prixReel) < 0.001);
+  } else if (ek === 'e3') {
+    const prixTotal = state.epreuves.e3.paniers[q].prixTotal;
+    priceLabel = `Prix total : ${formatPrice(prixTotal)}`;
+    hasExact = state.answers.e3[q].some(a => a !== null && Math.abs(a - prixTotal) < 0.001);
+  } else if (ek === 'e4') {
+    const prod = state.epreuves.e4.produits[q];
+    const bonne = prod.reel > prod.propose ? '+' : '−';
+    priceLabel = `Prix réel : ${formatPrice(prod.reel)} → ${bonne}`;
+  }
+
+  // Construire les badges équipe avec leur réponse + points + temps + bonus vitesse
+  const teamBadges = state.teams.map((name, i) => {
+    const answer = state.answers[ek][q][i];
+    const isExact = (ek === 'e2' || ek === 'e3') && answer !== null && (() => {
+      const ref = ek === 'e2' ? state.epreuves.e2.produits[q].prix : state.epreuves.e3.paniers[q].prixTotal;
+      return Math.abs(answer - ref) < 0.001;
+    })();
+
+    let answerDisplay = '—';
+    let answerClass = '';
+
+    if (ek === 'e1') {
+      if (answer !== null) {
+        const bonne = state.epreuves.e1.questions[q].bonne;
+        const isRight = answer === bonne;
+        answerDisplay = answer;
+        answerClass = isRight ? 'correct-answer' : 'wrong-answer';
+      }
+    } else if (ek === 'e2' || ek === 'e3') {
+      if (answer !== null) {
+        answerDisplay = formatPrice(answer);
+        answerClass = isExact ? 'correct-answer' : (pts[i] > 0 ? '' : 'wrong-answer');
+      }
+    } else if (ek === 'e4') {
+      if (answer !== null) {
+        const prod = state.epreuves.e4.produits[q];
+        const bonne = prod.reel > prod.propose ? '+' : '-';
+        answerDisplay = answer === '+' ? '➕ Plus' : '➖ Moins';
+        answerClass = answer === bonne ? 'correct-answer' : 'wrong-answer';
+      }
+    }
+
+    const speedBonus = liveSpeedBonus[i] || 0;
+    const speedBonusLabels = { 3: '⚡ +3 pts RAPIDITÉ', 2: '⚡ +2 pts RAPIDITÉ', 1: '⚡ +1 pt RAPIDITÉ' };
+    const hasSpeedBonus = speedBonus > 0;
+
+    // Temps de réponse depuis liveLastAnswers
+    const liveAns = liveLastAnswers && liveLastAnswers[i];
+    const timeDisplay = liveAns ? (liveAns.timestamp / 1000).toFixed(1) + 's' : null;
+
+    const badgeClass = [
+      isExact ? 'exact' : (pts[i] > 0 ? 'won' : ''),
+      hasSpeedBonus ? 'speed-bonus' : ''
+    ].join(' ').trim();
+
+    return `
+      <div class="correction-team-badge ${badgeClass}" id="badge-team-${i}">
+        <div class="correction-team-name">${escHtml(name)}</div>
+        <div class="correction-team-answer ${answerClass}">${answerDisplay}${isExact ? ' 🎯' : ''}</div>
+        <div class="correction-team-points ${pts[i] === 0 ? 'zero' : ''}">
+          ${pts[i] > 0 ? '+' + pts[i] + ' pt' + (pts[i] > 1 ? 's' : '') : '0 pt'}
+        </div>
+        ${timeDisplay ? `<div class="correction-team-time">⏱ ${timeDisplay}</div>` : ''}
+        ${hasSpeedBonus ? `<div class="correction-speed-bonus">${speedBonusLabels[speedBonus]}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  const content = document.getElementById('correction-content');
+  content.innerHTML = `
+    <div style="text-align:center;">
+      <div class="correction-label">✅ CORRECTION</div>
+      <div class="correction-price">${priceLabel}</div>
+      <div class="correction-scores">${teamBadges}</div>
+    </div>
+  `;
+
+  const overlay = document.getElementById('correction-overlay');
+  overlay.classList.add('visible');
+
+  // Mini feux d'artifice localisés sur chaque badge ayant un bonus vitesse
+  state.teams.forEach((_, i) => {
+    const speedBonus = liveSpeedBonus[i] || 0;
+    if (speedBonus > 0) {
+      setTimeout(() => launchBadgeFirework(i), 200 + i * 80);
+    }
+  });
+
+  if (hasExact) {
+    // Trouver les équipes qui ont le juste prix
+    let exactTeams = [];
+    if (ek === 'e2') {
+      const prixReel = state.epreuves.e2.produits[q].prix;
+      exactTeams = state.teams.filter((_, i) => state.answers.e2[q][i] !== null && Math.abs(state.answers.e2[q][i] - prixReel) < 0.001);
+    } else if (ek === 'e3') {
+      const prixTotal = state.epreuves.e3.paniers[q].prixTotal;
+      exactTeams = state.teams.filter((_, i) => state.answers.e3[q][i] !== null && Math.abs(state.answers.e3[q][i] - prixTotal) < 0.001);
+    }
+
+    overlay.classList.add('has-fireworks');
+    document.getElementById('exact-banner-teams').textContent =
+      exactTeams.length === 1
+        ? exactTeams[0] + ' a trouvé le juste prix !'
+        : exactTeams.join(' & ') + ' ont trouvé le juste prix !';
+    document.getElementById('exact-banner').classList.add('visible');
+    launchFireworks();
+  }
+}
+
+function hideCorrection() {
+  const overlay = document.getElementById('correction-overlay');
+  overlay.classList.remove('visible', 'has-fireworks');
+  document.getElementById('exact-banner').classList.remove('visible');
+
+  stopFireworks();
+}
+
+// ======================================================================
+// FIREWORKS
+// ======================================================================
+
+let fwAnimFrame = null;
+let fwParticles = [];
+
+function launchFireworks() {
+  const canvas = document.getElementById('fireworks-canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  fwParticles = [];
+
+  // Lancer plusieurs rafales
+  let count = 0;
+  function burst() {
+    if (count < 12) {
+      spawnBurst(canvas, fwParticles);
+      count++;
+      setTimeout(burst, 400);
+    }
+  }
+  burst();
+
+  function loop() {
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    fwParticles = fwParticles.filter(p => p.alpha > 0.02);
+    fwParticles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.12; // gravity
+      p.vx *= 0.98;
+      p.alpha -= 0.012;
+      ctx.globalAlpha = Math.max(0, p.alpha);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    fwAnimFrame = requestAnimationFrame(loop);
+  }
+  cancelAnimationFrame(fwAnimFrame);
+  loop();
+}
+
+function spawnBurst(canvas, particles) {
+  const colors = ['#ffd700','#ff4444','#44ff88','#4488ff','#ff88ff','#ffffff','#ffaa00','#00ffee'];
+  const x = Math.random() * canvas.width * 0.8 + canvas.width * 0.1;
+  const y = Math.random() * canvas.height * 0.5 + 50;
+  const num = 80 + Math.floor(Math.random() * 60);
+  const color = colors[Math.floor(Math.random() * colors.length)];
+  for (let i = 0; i < num; i++) {
+    const angle = (Math.PI * 2 * i) / num + (Math.random() - 0.5) * 0.3;
+    const speed = 2 + Math.random() * 5;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      alpha: 1,
+      r: 2 + Math.random() * 3,
+      color: Math.random() > 0.3 ? color : colors[Math.floor(Math.random() * colors.length)]
+    });
+  }
+}
+
+// Mini feu d'artifice centré sur un badge équipe spécifique
+function launchBadgeFirework(teamIdx) {
+  const badge = document.getElementById('badge-team-' + teamIdx);
+  if (!badge) return;
+
+  // Créer un canvas temporaire positionné sur le badge
+  const canvas = document.createElement('canvas');
+  canvas.className = 'badge-fw-canvas';
+  const W = badge.offsetWidth + 120;
+  const H = badge.offsetHeight + 120;
+  canvas.width  = W;
+  canvas.height = H;
+  badge.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  const cx = W / 2;
+  const cy = H / 2;
+  const colors = ['#ffd700','#ffaa00','#ffffff','#ff88ff','#44ff88','#4488ff'];
+  let particles = [];
+
+  // 2 rafales rapides
+  function burst() {
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const num = 40 + Math.floor(Math.random() * 20);
+    for (let k = 0; k < num; k++) {
+      const angle = (Math.PI * 2 * k) / num + (Math.random() - 0.5) * 0.4;
+      const speed = 1.5 + Math.random() * 3.5;
+      particles.push({
+        x: cx + (Math.random() - 0.5) * 20,
+        y: cy + (Math.random() - 0.5) * 20,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        alpha: 1,
+        r: 1.5 + Math.random() * 2,
+        color: Math.random() > 0.3 ? color : colors[Math.floor(Math.random() * colors.length)]
+      });
+    }
+  }
+  burst();
+  setTimeout(burst, 250);
+
+  let frame;
+  function loop() {
+    ctx.clearRect(0, 0, W, H);
+    particles = particles.filter(p => p.alpha > 0.03);
+    particles.forEach(p => {
+      p.x  += p.vx; p.y  += p.vy;
+      p.vy += 0.08; p.vx *= 0.98;
+      p.alpha -= 0.018;
+      ctx.globalAlpha = Math.max(0, p.alpha);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    if (particles.length > 0) {
+      frame = requestAnimationFrame(loop);
+    } else {
+      canvas.remove();
+    }
+  }
+  loop();
+}
+
+function stopFireworks() {
+  cancelAnimationFrame(fwAnimFrame);
+  fwAnimFrame = null;
+  const canvas = document.getElementById('fireworks-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  fwParticles = [];
+}
+
+// ======================================================================
+// FINAL SCREEN
+// ======================================================================
+
+// ======================================================================
+// CONFETTIS
+// ======================================================================
+
+let confettiFrame = null;
+let confettiPieces = [];
+
+function startConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  if (!canvas) return;
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+
+  const COLORS = [
+    '#ffd700','#ff4466','#44ccff','#88ff44',
+    '#ff88ff','#ffffff','#ffaa00','#00ffcc','#ff6644'
+  ];
+  const SHAPES = ['rect', 'circle', 'ribbon'];
+  confettiPieces = [];
+
+  // Générer 160 confettis répartis sur toute la largeur
+  for (let i = 0; i < 160; i++) {
+    const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+    confettiPieces.push({
+      x     : Math.random() * canvas.width,
+      y     : -20 - Math.random() * canvas.height,   // départ hors écran en haut
+      w     : shape === 'ribbon' ? 3 + Math.random() * 4 : 7 + Math.random() * 9,
+      h     : shape === 'ribbon' ? 14 + Math.random() * 12 : 7 + Math.random() * 9,
+      color : COLORS[Math.floor(Math.random() * COLORS.length)],
+      shape,
+      angle : Math.random() * Math.PI * 2,
+      spin  : (Math.random() - 0.5) * 0.18,
+      vx    : (Math.random() - 0.5) * 1.8,
+      vy    : 1.4 + Math.random() * 2.8,
+      sway  : Math.random() * Math.PI * 2,      // phase de balancement
+      swaySpeed: 0.03 + Math.random() * 0.04,
+      swayAmp  : 0.6 + Math.random() * 1.2,
+      alpha : 0.85 + Math.random() * 0.15,
+    });
+  }
+
+  cancelAnimationFrame(confettiFrame);
+
+  function loop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    confettiPieces.forEach(p => {
+      // Mouvement
+      p.sway += p.swaySpeed;
+      p.x    += p.vx + Math.sin(p.sway) * p.swayAmp;
+      p.y    += p.vy;
+      p.angle+= p.spin;
+
+      // Recycle en haut quand sorti par le bas
+      if (p.y > canvas.height + 20) {
+        p.y  = -20;
+        p.x  = Math.random() * canvas.width;
+      }
+
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.angle);
+      ctx.fillStyle = p.color;
+
+      if (p.shape === 'circle') {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.w / 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.shape === 'ribbon') {
+        // Ruban fin : scale sinusoïdal sur x pour effet ondulé
+        ctx.scale(Math.cos(p.sway * 1.5), 1);
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      } else {
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      }
+
+      ctx.restore();
+    });
+
+    confettiFrame = requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+function stopConfetti() {
+  cancelAnimationFrame(confettiFrame);
+  confettiFrame = null;
+  confettiPieces = [];
+  const canvas = document.getElementById('confetti-canvas');
+  if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function renderFinal() {
+  const ranked = getRankedTeams();
+
+  // Podium (top 3)
+  const top3 = ranked.filter(t => t.rank <= 3).slice(0, 3);
+  // Reorder: 2nd, 1st, 3rd for visual podium
+  const podiumOrder = [];
+  const second = top3.find(t => t.rank === 2);
+  const first = top3.find(t => t.rank === 1);
+  const third = top3.find(t => t.rank === 3);
+  if (second) podiumOrder.push({ ...second, cls: 'second', num: '2' });
+  if (first) podiumOrder.push({ ...first, cls: 'first', num: '1' });
+  if (third) podiumOrder.push({ ...third, cls: 'third', num: '3' });
+
+  const podiumEl = document.getElementById('podium');
+  podiumEl.innerHTML = podiumOrder.map(t => `
+    <div class="podium-place ${t.cls}">
+      <div class="podium-avatar ${t.cls === 'first' ? 'podium-avatar' : ''}">🏆</div>
+      <div class="podium-name">${escHtml(t.name)}</div>
+      <div class="podium-score">${t.score} pts</div>
+      <div class="podium-block">${t.num}</div>
+    </div>
+  `).join('');
+
+  // Full table
+  const tbody = document.getElementById('final-tbody');
+  tbody.innerHTML = ranked.map(t => `
+    <tr class="${t.rank <= 3 ? 'top-rank' : ''}">
+      <td>${t.rank}</td>
+      <td>${escHtml(t.name)}</td>
+      <td>${t.score} pts</td>
+    </tr>
+  `).join('');
+
+  // Lancer les confettis
+  startConfetti();
+
+  // Adapter le canvas si la fenêtre est redimensionnée
+  window._confettiResizeHandler = () => {
+    const canvas = document.getElementById('confetti-canvas');
+    if (canvas && confettiFrame) {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+  };
+  window.removeEventListener('resize', window._confettiResizeHandler);
+  window.addEventListener('resize', window._confettiResizeHandler);
+}
+
+function newGame() {
+  showConfirm({
+    icon: '🔄',
+    title: 'Nouvelle partie ?',
+    message: 'Tous les scores et réponses seront remis à zéro. Les équipes et produits seront conservés.',
+    labelOk: 'Nouvelle partie',
+    danger: true,
+    onOk: () => {
+      const n = state.teams.length;
+      state.scores = makeScores(n);
+      state.answers = makeAnswers(n);
+      state.revealed = {
+        e1: Array(5).fill(false),
+        e2: Array(5).fill(false),
+        e3: Array(3).fill(false),
+        e4: Array(5).fill(false)
+      };
+      state.currentEpreuve = 1;
+      state.currentQuestion = 0;
+      saveState();
+      showScreen('config');
+    }
+  });
+}
+
+// ======================================================================
+// UTILITIES
+// ======================================================================
+
+// ======================================================================
+// CONFIRM MODAL
+// ======================================================================
+
+function showConfirm({ icon = '⚠️', title, message, labelOk = 'Confirmer', danger = false, onOk }) {
+  document.getElementById('confirm-icon').textContent = icon;
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-message').textContent = message;
+
+  const okBtn = document.getElementById('confirm-ok');
+  okBtn.textContent = labelOk;
+  okBtn.className = 'btn ' + (danger ? 'btn-danger' : 'btn-primary');
+
+  // Cloner pour effacer les anciens listeners
+  const newOk = okBtn.cloneNode(true);
+  okBtn.parentNode.replaceChild(newOk, okBtn);
+  newOk.addEventListener('click', () => {
+    closeConfirm();
+    onOk();
+  });
+
+  document.getElementById('confirm-cancel').onclick = closeConfirm;
+  document.getElementById('confirm-modal').classList.add('visible');
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-modal').classList.remove('visible');
+}
+
+function escHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function formatPrice(val) {
+  if (val === null || val === undefined) return '???';
+  return parseFloat(val).toFixed(2).replace('.', ',') + ' €';
+}
+
+function imageTag(src) {
+  if (!src) return '<div class="no-image">Pas d\'image</div>';
+  return `<img src="${escHtml(src)}" alt="Produit" onclick="openLightbox(this.src)" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'>Image introuvable</div>'">`;
+}
+
+function openLightbox(src) {
+  const lb  = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img');
+  img.src = src;
+  lb.classList.add('visible');
+  document.addEventListener('keydown', onLightboxKey);
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('visible');
+  document.getElementById('lightbox-img').src = '';
+  document.removeEventListener('keydown', onLightboxKey);
+}
+
+function onLightboxKey(e) {
+  if (e.key === 'Escape') closeLightbox();
+}
+
+// ======================================================================
+// LIVE MODE — Gestion de la session serveur
+// ======================================================================
+
+let liveSession = null;       // { code }
+let livePollingId = null;     // setInterval id
+let liveQuestionOpen = false; // true si saisie ouverte sur les smartphones
+let liveLastAnswers = {};     // snapshot des réponses reçues
+
+// ── Créer une session sur le serveur
+async function createLiveSession() {
+  if (state.teams.length === 0) return alert('Configurez au moins une équipe avant de créer la session.');
+
+  // Construire epreuveData (données nécessaires pour les joueurs, sans les bonnes réponses)
+  const epreuveData = buildEpreuveDataForServer();
+
+  try {
+    const res = await fetch('/api/session/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ teams: state.teams, epreuveData })
+    });
+    const data = await res.json();
+    if (data.error) return alert('Erreur : ' + data.error);
+
+    liveSession = { code: data.code };
+    localStorage.setItem('ljp_live_session', JSON.stringify(liveSession));
+
+    updateSessionPanel();
+    startLivePolling();
+    updateLiveButtons();
+  } catch(e) {
+    alert('Impossible de joindre le serveur. Vérifiez que server.js est lancé (node server.js).');
+  }
+}
+
+// Détruire la session
+async function destroySession() {
+  if (!liveSession) return;
+  try { await fetch('/api/session/destroy', { method: 'POST' }); } catch(e) {}
+  liveSession = null;
+  liveQuestionOpen = false;
+  clearInterval(livePollingId);
+  livePollingId = null;
+  localStorage.removeItem('ljp_live_session');
+  document.getElementById('live-session-panel').classList.remove('visible');
+  updateLiveButtons();
+  document.getElementById('live-answers-panel').classList.remove('visible');
+}
+
+// ── Construire les données exposées aux joueurs (sans les bonnes réponses)
+function buildEpreuveDataForServer() {
+  return {
+    e1: {
+      questions: state.epreuves.e1.questions.map(q => ({
+        nom: q.nom, image: q.image, source: q.source,
+        A: q.A, B: q.B, C: q.C, D: q.D
+        // bonne : NON exposée
+      }))
+    },
+    e2: { produits: state.epreuves.e2.produits.map(p => ({ nom: p.nom, image: p.image, source: p.source })) },
+    e3: { paniers: state.epreuves.e3.paniers.map(pan => ({ nom: pan.nom, produits: pan.produits.map(pr => ({ nom: pr.nom, image: pr.image, source: pr.source })) })) },
+    e4: { produits: state.epreuves.e4.produits.map(p => ({ nom: p.nom, image: p.image, source: p.source, propose: p.propose })) }
+  };
+}
+
+// ── Synchroniser les équipes/données quand l'animateur les modifie
+async function syncSessionData() {
+  if (!liveSession) return;
+  try {
+    await fetch('/api/session/update-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ teams: state.teams, epreuveData: buildEpreuveDataForServer() })
+    });
+  } catch(e) {}
+}
+
+// ── Panneau session (dans la config)
+function updateSessionPanel() {
+  const panel = document.getElementById('live-session-panel');
+  if (!liveSession) { panel.classList.remove('visible'); return; }
+  panel.classList.add('visible');
+  document.getElementById('session-code-display').textContent = liveSession.code;
+  const base = window.location.origin;
+  document.getElementById('session-url-display').textContent = `${base}/joueur?code=${liveSession.code}`;
+}
+
+// ── Polling admin (toutes les 1s pour voir les connexions)
+function startLivePolling() {
+  if (livePollingId) clearInterval(livePollingId);
+  livePollingId = setInterval(async () => {
+    if (!liveSession) return;
+    try {
+      const res = await fetch('/api/session');
+      const data = await res.json();
+      if (!data.session) return;
+      onSessionPoll(data.session);
+    } catch(e) {}
+  }, 1000);
+}
+
+function onSessionPoll(sess) {
+  // Mettre à jour les chips de connexion
+  const connList = document.getElementById('session-conn-list');
+  if (connList) {
+    connList.innerHTML = state.teams.map((name, i) => {
+      const online = sess.connected[i] !== undefined;
+      return `<span class="conn-chip ${online ? 'online' : 'offline'}">${escHtml(name)}${online ? ' ✓' : ''}</span>`;
+    }).join('');
+    const nb = Object.keys(sess.connected).length;
+    const el = document.getElementById('session-conn-status');
+    if (el) el.textContent = `${nb} / ${state.teams.length} équipe(s) connectée(s)`;
+  }
+
+  // Mettre à jour les réponses live si une question est ouverte
+  if (liveQuestionOpen && sess.answers) {
+    liveLastAnswers = sess.answers;
+    renderLiveAnswers(sess.answers, sess.phase);
+
+    // Déclencher la fermeture + modale automatiquement quand toutes les équipes connectées ont répondu
+    const nbConnected = Object.keys(sess.connected).length;
+    const nbAnswered  = Object.keys(sess.answers).length;
+    if (nbConnected > 0 && nbAnswered >= nbConnected) {
+      autoCloseAndOpenModal();
+    }
+  }
+}
+
+let autoCloseRunning = false;
+async function autoCloseAndOpenModal() {
+  if (autoCloseRunning) return;  // éviter double déclenchement sur deux polls consécutifs
+  autoCloseRunning = true;
+
+  // Fermer la saisie sur le serveur
+  try {
+    const res = await fetch('/api/question/close', { method: 'POST' });
+    const data = await res.json();
+    if (data.answers) {
+      liveLastAnswers = data.answers;
+      renderLiveAnswers(data.answers, 'closed');
+      injectLiveAnswers(data.answers);
+    }
+  } catch(e) {}
+
+  liveQuestionOpen = false;
+  updateLiveButtons();
+
+  // Petit délai visuel (300ms) puis ouvrir la modale de saisie
+  setTimeout(() => {
+    autoCloseRunning = false;
+    openAnswerModal();
+  }, 300);
+}
+
+// ── Bouton RÉPONDEZ ! (ouvrir la question sur les smartphones)
+async function openLiveQuestion() {
+  if (!liveSession) return;
+
+  const ek = getEpreuveKey();
+  const q = state.currentQuestion;
+
+  // Construire l'objet question exposé aux joueurs
+  let question = null;
+
+  if (state.currentEpreuve === 1) {
+    const qdata = state.epreuves.e1.questions[q];
+    question = {
+      epreuve: 1, index: q, type: 'qcm',
+      label: qdata.nom,
+      choices: [qdata.A, qdata.B, qdata.C, qdata.D],
+      prixPropose: null
+    };
+  } else if (state.currentEpreuve === 2) {
+    const qdata = state.epreuves.e2.produits[q];
+    question = {
+      epreuve: 2, index: q, type: 'prix',
+      label: qdata.nom,
+      choices: null, prixPropose: null
+    };
+  } else if (state.currentEpreuve === 3) {
+    const qdata = state.epreuves.e3.paniers[q];
+    question = {
+      epreuve: 3, index: q, type: 'panier',
+      label: qdata.nom + ' — Quel est le prix total ?',
+      choices: null, prixPropose: null
+    };
+  } else if (state.currentEpreuve === 4) {
+    const qdata = state.epreuves.e4.produits[q];
+    question = {
+      epreuve: 4, index: q, type: 'plusmoins',
+      label: qdata.nom,
+      choices: null, prixPropose: qdata.propose
+    };
+  }
+
+  if (!question) return;
+
+  try {
+    const res = await fetch('/api/question/open', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question })
+    });
+    const data = await res.json();
+    if (data.error) return alert('Erreur : ' + data.error);
+
+    liveQuestionOpen = true;
+    liveLastAnswers = {};
+    document.getElementById('live-answers-panel').classList.add('visible');
+    renderLiveAnswers({}, 'answering');
+    updateLiveButtons();
+  } catch(e) {
+    alert('Erreur réseau. Vérifiez que node server.js est lancé.');
+  }
+}
+
+// ── Fermer la saisie
+async function closeLiveQuestion() {
+  if (!liveSession) return;
+  try {
+    const res = await fetch('/api/question/close', { method: 'POST' });
+    const data = await res.json();
+    if (data.answers) {
+      liveLastAnswers = data.answers;
+      renderLiveAnswers(data.answers, 'closed');
+      // Injecter les réponses dans state.answers pour la correction habituelle
+      injectLiveAnswers(data.answers);
+    }
+  } catch(e) {}
+  liveQuestionOpen = false;
+  updateLiveButtons();
+}
+
+// ── Injecter les réponses du serveur dans state.answers
+function injectLiveAnswers(answers) {
+  const ek = getEpreuveKey();
+  const q = state.currentQuestion;
+
+  // Trier les réponses par timestamp pour calculer le bonus de rapidité
+  const sorted = Object.entries(answers)
+    .map(([teamIdx, ans]) => ({ teamIdx: parseInt(teamIdx), value: ans.value, timestamp: ans.timestamp }))
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  // Points de bonus rapidité : 1er correct = +3, 2e = +2, 3e = +1
+  // On les applique après la correction normale (stockés temporairement)
+  liveSpeedBonus = {};
+
+  state.teams.forEach((_, i) => {
+    const ans = answers[i];
+    if (!ans) return;
+    const val = ans.value;
+
+    if (state.currentEpreuve === 1) {
+      state.answers.e1[q][i] = val;
+    } else if (state.currentEpreuve === 2) {
+      state.answers.e2[q][i] = typeof val === 'number' ? val : parseFloat(val) || null;
+    } else if (state.currentEpreuve === 3) {
+      state.answers.e3[q][i] = typeof val === 'number' ? val : parseFloat(val) || null;
+    } else if (state.currentEpreuve === 4) {
+      // Les joueurs envoient '+' ou '−' (tiret large), normaliser vers '+' ou '-'
+      state.answers.e4[q][i] = (val === '+' || val === '−') ? (val === '+' ? '+' : '-') : null;
+    }
+  });
+
+  // Calculer les bonus de vitesse APRÈS avoir injecté pour savoir qui a bon
+  const correctnessByTeam = computeCorrectness(ek, q);
+  let bonusRank = 1;
+  for (const item of sorted) {
+    if (correctnessByTeam[item.teamIdx]) {
+      liveSpeedBonus[item.teamIdx] = bonusRank === 1 ? 3 : bonusRank === 2 ? 2 : bonusRank === 3 ? 1 : 0;
+      if (liveSpeedBonus[item.teamIdx] > 0) bonusRank++;
+      if (bonusRank > 3) break;
+    }
+  }
+
+  saveState();
+}
+
+// Retourne un tableau booléen : est-ce que chaque équipe a une bonne réponse ?
+function computeCorrectness(ek, q) {
+  const correct = Array(state.teams.length).fill(false);
+  if (ek === 'e1') {
+    const bonne = state.epreuves.e1.questions[q].bonne;
+    state.teams.forEach((_, i) => { correct[i] = state.answers.e1[q][i] === bonne; });
+  } else if (ek === 'e2') {
+    const prixReel = state.epreuves.e2.produits[q].prix;
+    const answers = state.answers.e2[q];
+    const valid = answers.map((a, i) => a !== null ? { i, ecart: Math.abs(a - prixReel) } : null).filter(Boolean);
+    if (valid.length > 0) {
+      const minEcart = Math.min(...valid.map(a => a.ecart));
+      valid.forEach(a => { if (a.ecart === minEcart) correct[a.i] = true; });
+    }
+  } else if (ek === 'e3') {
+    const prixTotal = state.epreuves.e3.paniers[q].prixTotal;
+    const answers = state.answers.e3[q];
+    const valid = answers.map((a, i) => a !== null ? { i, ecart: Math.abs(a - prixTotal) } : null).filter(Boolean);
+    if (valid.length > 0) {
+      const minEcart = Math.min(...valid.map(a => a.ecart));
+      valid.forEach(a => { if (a.ecart === minEcart) correct[a.i] = true; });
+    }
+  } else if (ek === 'e4') {
+    const prod = state.epreuves.e4.produits[q];
+    const bonne = prod.reel > prod.propose ? '+' : '-';
+    state.teams.forEach((_, i) => { correct[i] = state.answers.e4[q][i] === bonne; });
+  }
+  return correct;
+}
+
+// Variable globale bonus de vitesse (réinitialisée à chaque question)
+let liveSpeedBonus = {};
+
+// ── Rendu des réponses live dans le panneau admin
+function renderLiveAnswers(answers, phase) {
+  const grid = document.getElementById('live-answers-grid');
+  const countEl = document.getElementById('live-count-display');
+  if (!grid) return;
+
+  const nbAnswered = Object.keys(answers).length;
+  const nbConnected = Object.keys(
+    (function() { try { return JSON.parse(localStorage.getItem('ljp_live_conn') || '{}'); } catch(e) { return {}; } })()
+  ).length;
+  countEl.textContent = `${nbAnswered} / ${state.teams.length} réponse(s)`;
+
+  grid.innerHTML = state.teams.map((name, i) => {
+    const ans = answers[i];
+    if (!ans) {
+      return `<div class="live-answer-chip">
+        <span class="live-chip-team">${escHtml(name)}</span>
+        <span style="color:rgba(255,255,255,0.3);">—</span>
+      </div>`;
+    }
+    const secs = (ans.timestamp / 1000).toFixed(1) + 's';
+    return `<div class="live-answer-chip has-answer">
+      <span class="live-chip-team">${escHtml(name)}</span>
+      <span class="live-chip-value">✓</span>
+      <span class="live-chip-time">${secs}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Afficher/masquer les boutons selon l'état
+function updateLiveButtons() {
+  const hasSession = !!liveSession;
+  const btnR = document.getElementById('btn-repondez');
+  const btnC = document.getElementById('btn-close-question');
+  const btnCreate = document.getElementById('btn-create-session');
+
+  if (btnR) btnR.style.display = hasSession && !liveQuestionOpen ? 'inline-block' : 'none';
+  if (btnC) btnC.style.display = hasSession && liveQuestionOpen  ? 'inline-block' : 'none';
+  if (btnCreate) btnCreate.style.display = hasSession ? 'none' : 'inline-block';
+}
+
+// ── Patch validateAnswers pour ajouter les bonus de rapidité
+const _origValidateAnswers = validateAnswers;
+window.validateAnswers = function() {
+  _origValidateAnswers();
+  // Appliquer les bonus de vitesse après la correction normale
+  if (Object.keys(liveSpeedBonus).length > 0) {
+    Object.entries(liveSpeedBonus).forEach(([teamIdx, bonus]) => {
+      if (bonus > 0) {
+        state.scores[parseInt(teamIdx)] += bonus;
+      }
+    });
+    liveSpeedBonus = {};
+    saveState();
+    renderScoreboard();
+  }
+};
+
+// ── Restaurer session live au rechargement de page
+(function restoreLiveSession() {
+  const saved = localStorage.getItem('ljp_live_session');
+  if (saved) {
+    try {
+      liveSession = JSON.parse(saved);
+      updateSessionPanel();
+      startLivePolling();
+    } catch(e) { localStorage.removeItem('ljp_live_session'); }
+  }
+})();
+
+// ── showScreen patch : mettre à jour les boutons live à chaque changement d'écran
+const _origShowScreen = showScreen;
+window.showScreen = function(name) {
+  if (name !== 'final') stopConfetti();
+  _origShowScreen(name);
+  updateLiveButtons();
+  if (name === 'config') syncSessionData();
+};
+
+// ======================================================================
+// INIT
+// ======================================================================
+
+loadState();
+renderConfig();
+
+// Restore screen : on revient en jeu/final si c'était actif, sinon accueil
+if (state.currentScreen === 'game') showScreen('game');
+else if (state.currentScreen === 'final') showScreen('final');
+// tous les autres cas (config, accueil, ou premier lancement) → accueil
+
+// Resize fireworks canvas on window resize
+window.addEventListener('resize', () => {
+  const canvas = document.getElementById('fireworks-canvas');
+  if (fwAnimFrame) {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+});
+</script>
+</body>
+</html>
